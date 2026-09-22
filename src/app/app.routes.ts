@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { NotFound } from './not-found/not-found';
+import { ProductDetail } from './product-detail/product-detail';
 import { ProductList } from './product-list/product-list';
 
 // Rutas eager: cada ruta referencia el componente con `component:` (nunca `loadComponent:`).
@@ -8,5 +9,7 @@ import { ProductList } from './product-list/product-list';
 export const routes: Routes = [
   { path: '', redirectTo: '/productos', pathMatch: 'full' },
   { path: 'productos', component: ProductList },
+  { path: 'producto/:id', component: ProductDetail },
   { path: '**', component: NotFound },
 ];
+

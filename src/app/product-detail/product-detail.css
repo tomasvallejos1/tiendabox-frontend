@@ -1,0 +1,153 @@
+.product-detail-container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+/* --- Botón volver --- */
+
+.back-link {
+  margin-bottom: 16px;
+  display: inline-flex;
+}
+
+/* --- Card principal --- */
+
+.detail-card {
+  padding: 8px 0;
+}
+
+/* --- Chips de categoría / marca --- */
+
+.chips {
+  margin: 16px 0;
+}
+
+/* --- Descripción --- */
+
+.description {
+  font: var(--mat-sys-body-large);
+  color: var(--mat-sys-on-surface-variant);
+  margin: 0 0 24px;
+  line-height: 1.6;
+}
+
+/* --- Bloque de precio (stock) --- */
+
+.price-block {
+  margin: 0 0 24px;
+}
+
+.price {
+  font: var(--mat-sys-headline-medium);
+  color: var(--mat-sys-primary);
+  margin: 0 0 4px;
+}
+
+.stock {
+  font: var(--mat-sys-body-medium);
+  margin: 0;
+}
+
+.stock.available {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.stock.out-of-stock {
+  color: var(--mat-sys-error);
+  font-weight: 500;
+}
+
+/* --- Bloque por encargo --- */
+
+.encargo-block {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  margin: 0 0 24px;
+  border-radius: 12px;
+  background: var(--mat-sys-tertiary-container);
+  color: var(--mat-sys-on-tertiary-container);
+}
+
+.encargo-icon {
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.encargo-title {
+  font: var(--mat-sys-title-medium);
+  margin: 0 0 4px;
+}
+
+.encargo-description {
+  font: var(--mat-sys-body-medium);
+  margin: 0;
+}
+
+/* --- Sección de agregar al carrito --- */
+
+.add-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 0 0 16px;
+}
+
+.quantity-field {
+  width: 100px;
+}
+
+.add-button {
+  flex-shrink: 0;
+}
+
+/* --- Prompt de login --- */
+
+.login-prompt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  margin: 0 0 16px;
+  border-radius: 12px;
+  background: var(--mat-sys-surface-variant);
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-medium);
+}
+
+.login-prompt a {
+  color: var(--mat-sys-primary);
+  text-decoration: underline;
+}
+
+/* --- Estados: loading, error, not found --- */
+
+.state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 64px 16px;
+  text-align: center;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.state-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+}
+
+.state-icon.warning {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.state-icon.error {
+  color: var(--mat-sys-error);
+}

@@ -1,0 +1,110 @@
+<section class="product-detail-container">
+  @if (loading()) {
+    <div class="state-container" role="status" aria-live="polite">
+      <mat-spinner diameter="48" />
+      <p>Cargando producto…</p>
+    </div>
+  } @else if (notFound()) {
+    <div class="state-container" role="alert">
+      <mat-icon class="state-icon warning">search_off</mat-icon>
+      <p>Producto no encontrado.</p>
+      <a matButton="filled" routerLink="/productos">
+        <mat-icon>arrow_back</mat-icon>
+        Volver al catálogo
+      </a>
+    </div>
+  } @else if (loadFailed()) {
+    <div class="state-container" role="alert">
+      <mat-icon class="state-icon error">error_outline</mat-icon>
+      <p>Error al cargar el producto. Intentá de nuevo más tarde.</p>
+      <a matButton="filled" routerLink="/productos">
+        <mat-icon>arrow_back</mat-icon>
+        Volver al catálogo
+      </a>
+    </div>
+  } @else if (product(); as p) {
+    <a matButton="outlined" routerLink="/productos" class="back-link">
+      <mat-icon>arrow_back</mat-icon>
+      Volver al catálogo
+    </a>
+
+    <mat-card class="detail-card">
+      <mat-card-header>
+        <mat-card-title>{{ p.name }}</mat-card-title>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="chips">
+          <mat-chip-set>
+            <mat-chip>
+              <mat-icon matChipAvatar>category</mat-icon>
+              {{ p.category_name }}
+            </mat-chip>
+            <mat-chip>
+              <mat-icon matChipAvatar>storefront</mat-icon>
+              {{ p.brand_name }}
+            </mat-chip>
+          </mat-chip-set>
+        </div>
+
+        @if (p.description) {
+          <p class="description">{{ p.description }}</p>
+        }
+
+        @if (p.type === 'stock') {
+          <div class="price-block">
+            <p class="price">{{ p.price | currency: 'ARS' : 'symbol-narrow' : '1.2-2' }}</p>
+            @if (p.stock > 0) {
+              <p class="stock available">
+                {{ p.stock }} disponible{{ p.stock !== 1 ? 's' : '' }}
+              </p>
+            } @else {
+              <p class="stock out-of-stock">Sin stock disponible</p>
+            }
+          </div>
+        } @else {
+          <div class="encargo-block">
+            <mat-icon class="encargo-icon">assignment</mat-icon>
+            <div>
+              <p class="encargo-title">Producto por encargo</p>
+              <p class="encargo-description">
+                Este producto se pide a demanda. El precio se confirma al procesar el pedido.
+              </p>
+            </div>
+          </div>
+        }
+
+        @if (authService.isCliente()) {
+          <div class="add-section">
+            <mat-form-field class="quantity-field">
+              <mat-label>Cantidad</mat-label>
+              <input
+                matInput
+                type="number"
+                [ngModel]="quantity()"
+                (ngModelChange)="onQuantityChange($event)"
+                min="1"
+                [max]="maxQuantity"
+              />
+            </mat-form-field>
+
+            <button
+              matButton="filled"
+              (click)="addToCart()"
+              [disabled]="!canAdd"
+              class="add-button"
+            >
+              <mat-icon>add_shopping_cart</mat-icon>
+              Agregar al carrito
+            </button>
+          </div>
+        } @else if (!authService.isLoggedIn()) {
+          <div class="login-prompt">
+            <mat-icon>info</mat-icon>
+            <span>Para comprar, <a routerLink="/login">iniciá sesión</a>.</span>
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+</section>
