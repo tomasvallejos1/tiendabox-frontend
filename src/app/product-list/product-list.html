@@ -1,0 +1,114 @@
+<section class="product-list-container">
+  <h1>Productos</h1>
+
+  <div class="filters">
+    <mat-form-field>
+      <mat-label>Categoría</mat-label>
+      <mat-select
+        [value]="selectedCategoryId()"
+        (selectionChange)="onCategoryChange($event.value)"
+      >
+        <mat-option [value]="null">Todas</mat-option>
+        @for (cat of categories(); track cat.id) {
+          <mat-option [value]="cat.id">{{ cat.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Marca</mat-label>
+      <mat-select
+        [value]="selectedBrandId()"
+        (selectionChange)="onBrandChange($event.value)"
+      >
+        <mat-option [value]="null">Todas</mat-option>
+        @for (brand of brands(); track brand.id) {
+          <mat-option [value]="brand.id">{{ brand.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <button matButton="outlined" (click)="clearFilters()">
+      <mat-icon>filter_alt_off</mat-icon>
+      Limpiar filtros
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="state-container" role="status" aria-live="polite">
+      <mat-spinner diameter="48" />
+      <p>Cargando productos…</p>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="state-container error-panel" role="alert">
+      <mat-icon class="error-icon">error_outline</mat-icon>
+      <p>{{ errorMessage() }}</p>
+      <button matButton="filled" (click)="loadProducts()">
+        <mat-icon>refresh</mat-icon>
+        Reintentar
+      </button>
+    </div>
+  } @else {
+    <p class="result-count">{{ products().length }} producto{{ products().length !== 1 ? 's' : '' }} encontrado{{ products().length !== 1 ? 's' : '' }}</p>
+
+    @if (products().length === 0) {
+      <div class="state-container empty-panel">
+        <mat-icon class="empty-icon">search_off</mat-icon>
+        <p>No se encontraron productos con esos filtros.</p>
+      </div>
+    } @else {
+      <div class="product-grid">
+        @for (product of products(); track product.id) {
+          <mat-card class="product-card">
+            <mat-card-header>
+              <mat-card-title>{{ product.name }}</mat-card-title>
+              <mat-card-subtitle>
+                {{ getCategoryName(product.category_id) }} · {{ getBrandName(product.brand_id) }}
+              </mat-card-subtitle>
+            </mat-card-header>
+
+            <mat-card-content>
+              @if (product.type === 'stock') {
+                <p class="price">{{ product.price | currency: 'ARS' : 'symbol-narrow' : '1.2-2' }}</p>
+                @if (product.stock > 0) {
+                  <p class="stock available">{{ product.stock }} disponible{{ product.stock !== 1 ? 's' : '' }}</p>
+                } @else {
+                  <p class="stock out-of-stock">Sin stock</p>
+                }
+              } @else {
+                <p class="price encargo">Por encargo</p>
+                <p class="stock encargo-hint">Consultar precio</p>
+              }
+            </mat-card-content>
+
+            <mat-card-actions align="end">
+              <a matButton="outlined" [routerLink]="['/producto', product.id]">
+                <mat-icon>visibility</mat-icon>
+                Ver detalle
+              </a>
+
+              @if (authService.isCliente()) {
+                @if (product.type === 'stock' && product.stock === 0) {
+                  <button matButton="tonal" disabled>
+                    <mat-icon>remove_shopping_cart</mat-icon>
+                    Sin stock
+                  </button>
+                } @else {
+                  <button matButton="filled" (click)="addToCart(product.id)">
+                    <mat-icon>add_shopping_cart</mat-icon>
+                    Agregar
+                  </button>
+                }
+              } @else if (!authService.isLoggedIn()) {
+                <a matButton="tonal" routerLink="/login">
+                  <mat-icon>login</mat-icon>
+                  Ingresá para comprar
+                </a>
+              }
+            </mat-card-actions>
+          </mat-card>
+        }
+      </div>
+    }
+  }
+</section>
