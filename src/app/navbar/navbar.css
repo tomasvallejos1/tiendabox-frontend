@@ -1,0 +1,99 @@
+/* ===== Layout general de la barra ===== */
+
+:host {
+  display: block;
+}
+
+.navbar {
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  padding: 0;
+}
+
+.navbar-content {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+  box-sizing: border-box;
+  gap: 8px;
+}
+
+/* ===== Brand / Logo ===== */
+
+.navbar-brand {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--mat-sys-primary);
+  text-decoration: none;
+  letter-spacing: -0.5px;
+  white-space: nowrap;
+}
+
+.navbar-brand:hover {
+  opacity: 0.85;
+}
+
+/* ===== Spacer (empuja elementos a la derecha) ===== */
+
+.spacer {
+  flex: 1;
+}
+
+/* ===== Links de escritorio ===== */
+
+.navbar-links {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 4px;
+}
+
+/* ===== Link activo ===== */
+
+.active-link {
+  color: var(--mat-sys-primary) !important;
+}
+
+/* ===== Botón hamburguesa (oculto en escritorio) ===== */
+
+.navbar-toggle {
+  display: none;
+}
+
+/* ===== Menú móvil ===== */
+
+.navbar-mobile-menu {
+  display: none;
+  flex-direction: column;
+  width: 100%;
+  padding: 8px 16px 16px;
+  box-sizing: border-box;
+  gap: 4px;
+}
+
+.navbar-mobile-menu a,
+.navbar-mobile-menu button {
+  justify-content: flex-start;
+  width: 100%;
+}
+
+/* ===== Responsive: breakpoint móvil ===== */
+
+@media (max-width: 768px) {
+  .navbar-links {
+    display: none;
+  }
+
+  .navbar-toggle {
+    display: inline-flex;
+    margin-left: auto;
+  }
+
+  .navbar-mobile-menu {
+    display: flex;
+  }
+}

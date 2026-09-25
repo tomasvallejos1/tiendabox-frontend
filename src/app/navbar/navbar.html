@@ -1,0 +1,104 @@
+<mat-toolbar class="navbar">
+  <div class="navbar-content">
+    <!-- Logo / Nombre del sitio -->
+    <a class="navbar-brand" routerLink="/productos">TiendaBox</a>
+
+    <!-- Links de escritorio -->
+    <div class="navbar-links">
+      @if (!authService.isLoggedIn()) {
+        <!-- Sin sesión -->
+        <a matButton="text" routerLink="/productos" routerLinkActive="active-link">Catálogo</a>
+
+        <span class="spacer"></span>
+
+        <a matButton="tonal" routerLink="/login" routerLinkActive="active-link">Ingresar</a>
+        <a matButton="filled" routerLink="/registro" routerLinkActive="active-link">Crear cuenta</a>
+      } @else if (authService.isCliente()) {
+        <!-- Rol cliente -->
+        <a matButton="text" routerLink="/productos" routerLinkActive="active-link">Catálogo</a>
+
+        <span class="spacer"></span>
+
+        <a matButton="text" routerLink="/carrito" routerLinkActive="active-link">
+          <mat-icon
+            [matBadge]="cartService.itemCount()"
+            matBadgeColor="warn"
+            [matBadgeHidden]="cartService.itemCount() === 0"
+            matBadgeSize="small"
+          >
+            shopping_cart
+          </mat-icon>
+        </a>
+        <a matButton="text" routerLink="/mis-pedidos" routerLinkActive="active-link">
+          Mis pedidos
+        </a>
+        <a matButton="text" routerLink="/perfil" routerLinkActive="active-link">Mi perfil</a>
+        <button matButton="text" (click)="logout()">Salir</button>
+      } @else if (authService.isOwner()) {
+        <!-- Rol owner -->
+        <span class="spacer"></span>
+
+        <button matButton="text" [matMenuTriggerFor]="adminMenu">
+          <mat-icon>admin_panel_settings</mat-icon>
+          Administración
+        </button>
+        <mat-menu #adminMenu="matMenu">
+          <a mat-menu-item routerLink="/admin/productos">Productos</a>
+          <a mat-menu-item routerLink="/admin/categorias">Categorías</a>
+          <a mat-menu-item routerLink="/admin/marcas">Marcas</a>
+          <a mat-menu-item routerLink="/admin/pedidos">Pedidos</a>
+        </mat-menu>
+        <button matButton="text" (click)="logout()">Salir</button>
+      }
+    </div>
+
+    <!-- Botón hamburguesa para móvil -->
+    <button class="navbar-toggle" matIconButton (click)="mobileMenuOpen = !mobileMenuOpen">
+      <mat-icon>{{ mobileMenuOpen ? 'close' : 'menu' }}</mat-icon>
+    </button>
+  </div>
+
+  <!-- Menú móvil desplegable -->
+  @if (mobileMenuOpen) {
+    <div class="navbar-mobile-menu">
+      @if (!authService.isLoggedIn()) {
+        <a matButton="text" routerLink="/productos" routerLinkActive="active-link"
+           (click)="mobileMenuOpen = false">Catálogo</a>
+        <a matButton="tonal" routerLink="/login" routerLinkActive="active-link"
+           (click)="mobileMenuOpen = false">Ingresar</a>
+        <a matButton="filled" routerLink="/registro" routerLinkActive="active-link"
+           (click)="mobileMenuOpen = false">Crear cuenta</a>
+      } @else if (authService.isCliente()) {
+        <a matButton="text" routerLink="/productos" routerLinkActive="active-link"
+           (click)="mobileMenuOpen = false">Catálogo</a>
+        <a matButton="text" routerLink="/carrito" routerLinkActive="active-link"
+           (click)="mobileMenuOpen = false">
+          <mat-icon
+            [matBadge]="cartService.itemCount()"
+            matBadgeColor="warn"
+            [matBadgeHidden]="cartService.itemCount() === 0"
+            matBadgeSize="small"
+          >
+            shopping_cart
+          </mat-icon>
+          Carrito
+        </a>
+        <a matButton="text" routerLink="/mis-pedidos" routerLinkActive="active-link"
+           (click)="mobileMenuOpen = false">Mis pedidos</a>
+        <a matButton="text" routerLink="/perfil" routerLinkActive="active-link"
+           (click)="mobileMenuOpen = false">Mi perfil</a>
+        <button matButton="text" (click)="logout(); mobileMenuOpen = false">Salir</button>
+      } @else if (authService.isOwner()) {
+        <a matButton="text" routerLink="/admin/productos" routerLinkActive="active-link"
+           (click)="mobileMenuOpen = false">Productos</a>
+        <a matButton="text" routerLink="/admin/categorias" routerLinkActive="active-link"
+           (click)="mobileMenuOpen = false">Categorías</a>
+        <a matButton="text" routerLink="/admin/marcas" routerLinkActive="active-link"
+           (click)="mobileMenuOpen = false">Marcas</a>
+        <a matButton="text" routerLink="/admin/pedidos" routerLinkActive="active-link"
+           (click)="mobileMenuOpen = false">Pedidos</a>
+        <button matButton="text" (click)="logout(); mobileMenuOpen = false">Salir</button>
+      }
+    </div>
+  }
+</mat-toolbar>
