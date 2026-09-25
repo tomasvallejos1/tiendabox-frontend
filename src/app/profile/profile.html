@@ -1,0 +1,70 @@
+@if (loading()) {
+  <mat-spinner />
+} @else if (loadFailed()) {
+  <mat-card class="profile-card" appearance="outlined">
+    <mat-card-content>
+      <p>No se pudo cargar tu perfil. Intentá de nuevo más tarde.</p>
+    </mat-card-content>
+  </mat-card>
+} @else {
+  <mat-card class="profile-card" appearance="outlined">
+    <mat-card-header>
+      <mat-card-title>Mi perfil</mat-card-title>
+      <mat-card-subtitle>Datos fiscales y de contacto</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <mat-form-field>
+          <mat-label>Nombre</mat-label>
+          <input matInput formControlName="name" />
+          @if (form.controls.name.hasError('required') || form.controls.name.hasError('pattern')) {
+            <mat-error>El nombre es obligatorio</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>CUIT / CUIL</mat-label>
+          <input matInput formControlName="government_id" />
+          <mat-hint>11 dígitos, sin guiones</mat-hint>
+          @if (form.controls.government_id.hasError('pattern')) {
+            <mat-error>Debe tener exactamente 11 dígitos numéricos</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>Condición fiscal</mat-label>
+          <mat-select formControlName="tax_status">
+            @for (option of taxStatusOptions; track option.value) {
+              <mat-option [value]="option.value">{{ option.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>Teléfono</mat-label>
+          <input matInput formControlName="phone" />
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>Dirección</mat-label>
+          <input matInput formControlName="address" />
+          <mat-hint>Se usa como dirección de envío por defecto</mat-hint>
+        </mat-form-field>
+
+        @if (errorMessage()) {
+          <p class="error-message">{{ errorMessage() }}</p>
+        }
+
+        <div class="actions">
+          <button matButton="filled" type="submit" [disabled]="saving()">
+            @if (saving()) {
+              Guardando…
+            } @else {
+              Guardar
+            }
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+}

@@ -1,0 +1,22 @@
+.profile-card {
+  max-width: 560px;
+  margin: 48px auto;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.error-message {
+  color: var(--mat-sys-error);
+  font-size: 14px;
+  margin: 4px 0;
+}
