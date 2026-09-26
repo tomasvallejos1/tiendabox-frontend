@@ -1,0 +1,33 @@
+:host {
+  display: inline-block;
+}
+
+.status-pendiente {
+  --mat-chip-elevated-container-color: #f9a825;
+  --mat-chip-label-text-color: #fff;
+}
+
+.status-confirmado {
+  --mat-chip-elevated-container-color: #1e88e5;
+  --mat-chip-label-text-color: #fff;
+}
+
+.status-en-preparacion {
+  --mat-chip-elevated-container-color: #1565c0;
+  --mat-chip-label-text-color: #fff;
+}
+
+.status-listo {
+  --mat-chip-elevated-container-color: #2e7d32;
+  --mat-chip-label-text-color: #fff;
+}
+
+.status-entregado {
+  --mat-chip-elevated-container-color: #757575;
+  --mat-chip-label-text-color: #fff;
+}
+
+.status-cancelado {
+  --mat-chip-elevated-container-color: #c62828;
+  --mat-chip-label-text-color: #fff;
+}
