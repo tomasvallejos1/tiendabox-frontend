@@ -1,0 +1,168 @@
+@if (loading()) {
+  <mat-spinner />
+} @else if (errorMessage() && !cart()) {
+  <mat-card class="cart-card" appearance="outlined">
+    <mat-card-content>
+      <p class="error-message">{{ errorMessage() }}</p>
+      <button matButton="filled" (click)="loadCart()">Reintentar</button>
+    </mat-card-content>
+  </mat-card>
+} @else if (!cart() || cart()!.items.length === 0) {
+  <mat-card class="cart-card empty-card" appearance="outlined">
+    <mat-card-content class="empty-state">
+      <mat-icon class="empty-icon">shopping_cart</mat-icon>
+      <h2>Tu carrito está vacío</h2>
+      <p>Agregá productos del catálogo para empezar.</p>
+      <a matButton="filled" routerLink="/productos">Ver el catálogo</a>
+    </mat-card-content>
+  </mat-card>
+} @else {
+  <div class="cart-layout">
+    <!-- Lista de ítems (mobile-first: mat-card por ítem) -->
+    <section class="items-section">
+      <h1 class="section-title">Mi carrito</h1>
+
+      @for (item of cart()!.items; track item.product_id) {
+        <mat-card
+          class="item-card"
+          appearance="outlined"
+          [class.unavailable]="!item.available"
+        >
+          <mat-card-content class="item-content">
+            <div class="item-info">
+              <span class="item-name">
+                @if (item.name) {
+                  {{ item.name }}
+                } @else {
+                  Producto no disponible
+                }
+              </span>
+
+              @if (!item.available) {
+                <span class="item-warning unavailable-warning">Ya no está disponible</span>
+              }
+
+              @if (item.exceeds_stock) {
+                <span class="item-warning stock-warning">
+                  Solo quedan {{ item.stock_available }} unidades
+                </span>
+              }
+
+              <div class="item-details">
+                <span class="item-qty">Cant: {{ item.quantity }}</span>
+
+                @if (item.type === 'encargo') {
+                  <span class="item-price">Precio: a confirmar</span>
+                  <span class="item-subtotal">—</span>
+                } @else {
+                  <span class="item-price">
+                    {{ item.unit_price | currency: 'ARS' : 'symbol-narrow' }} c/u
+                  </span>
+                  <span class="item-subtotal">
+                    {{ item.subtotal | currency: 'ARS' : 'symbol-narrow' }}
+                  </span>
+                }
+              </div>
+            </div>
+
+            <button
+              matIconButton
+              (click)="removeItem(item)"
+              [disabled]="removingIds().has(item.product_id)"
+              aria-label="Eliminar producto del carrito"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </mat-card-content>
+        </mat-card>
+      }
+    </section>
+
+    <!-- Resumen y formulario -->
+    <section class="summary-section">
+      <mat-card class="summary-card" appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>Resumen del pedido</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="summary-total">
+            <span>Total</span>
+            <span class="total-amount">
+              {{ cart()!.total | currency: 'ARS' : 'symbol-narrow' }}
+            </span>
+          </div>
+
+          @if (cart()!.has_encargo_items) {
+            <p class="encargo-note">
+              Incluye productos por encargo cuyo precio se confirma al procesar el pedido.
+            </p>
+          }
+
+          @if (blockReason) {
+            <p class="block-reason">{{ blockReason }}</p>
+          }
+
+          <div class="summary-actions">
+            <button
+              matButton="outlined"
+              (click)="clearCart()"
+              [disabled]="clearing()"
+            >
+              @if (clearing()) {
+                Vaciando…
+              } @else {
+                Vaciar carrito
+              }
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Formulario de confirmación -->
+      <mat-card class="checkout-card" appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>Datos de entrega</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <form [formGroup]="form" (ngSubmit)="confirmOrder()">
+            <mat-radio-group formControlName="delivery_type" class="delivery-radio-group">
+              <mat-radio-button value="retiro">Retiro en el local</mat-radio-button>
+              <mat-radio-button value="envio">Envío a domicilio</mat-radio-button>
+            </mat-radio-group>
+            @if (form.controls.delivery_type.touched && form.controls.delivery_type.hasError('required')) {
+              <p class="field-error">Seleccioná un tipo de entrega</p>
+            }
+
+            @if (form.controls.delivery_type.value === 'envio') {
+              <mat-form-field>
+                <mat-label>Dirección de envío</mat-label>
+                <input matInput formControlName="delivery_address" />
+                @if (form.controls.delivery_address.touched && form.controls.delivery_address.hasError('required')) {
+                  <mat-error>La dirección es obligatoria para envío a domicilio</mat-error>
+                }
+              </mat-form-field>
+            }
+
+            @if (errorMessage()) {
+              <p class="error-message">{{ errorMessage() }}</p>
+            }
+
+            <div class="checkout-actions">
+              <button
+                matButton="filled"
+                type="submit"
+                [disabled]="confirming() || confirmBlocked"
+              >
+                @if (confirming()) {
+                  Confirmando…
+                } @else {
+                  Confirmar pedido
+                }
+              </button>
+            </div>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    </section>
+  </div>
+}
