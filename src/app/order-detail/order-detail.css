@@ -1,0 +1,132 @@
+:host {
+  display: block;
+  padding: 24px 16px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.page-title {
+  font: var(--mat-sys-title-large);
+  color: var(--mat-sys-on-surface);
+  margin: 0 0 16px;
+}
+
+.section-title {
+  font: var(--mat-sys-title-medium);
+  color: var(--mat-sys-on-surface);
+  margin: 24px 0 12px;
+}
+
+/* Info card */
+.info-card {
+  margin-bottom: 8px;
+}
+
+.info-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.info-row {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.info-label {
+  font-weight: 500;
+  min-width: 80px;
+  color: var(--mat-sys-on-surface-variant);
+  flex-shrink: 0;
+}
+
+.delivery-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.delivery-address {
+  font-size: 13px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.order-total {
+  font-weight: 500;
+  color: var(--mat-sys-on-surface);
+}
+
+/* Items cards: visible por defecto (mobile) */
+.items-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.item-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.item-name {
+  font-weight: 500;
+  color: var(--mat-sys-on-surface);
+}
+
+.item-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-size: 14px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.item-subtotal {
+  font-weight: 500;
+  color: var(--mat-sys-on-surface);
+}
+
+/* Items table: oculta por defecto (desktop) */
+.items-table {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .items-cards {
+    display: none;
+  }
+
+  .items-table {
+    display: block;
+  }
+
+  .items-table table {
+    width: 100%;
+  }
+}
+
+/* Actions */
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+/* Error / message */
+.message-card {
+  max-width: 480px;
+  margin: 48px auto;
+}
+
+.error-message {
+  color: var(--mat-sys-error);
+  font-size: 14px;
+  margin: 0;
+}
+
+.action-error {
+  margin-top: 16px;
+  text-align: right;
+}
