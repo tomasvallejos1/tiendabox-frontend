@@ -1,0 +1,100 @@
+.admin-brand-list-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+h1 {
+  font: var(--mat-sys-headline-medium);
+  color: var(--mat-sys-on-surface);
+  margin: 0;
+}
+
+/* --- Estados --- */
+
+.state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 64px 16px;
+  text-align: center;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.state-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+}
+
+.error-icon {
+  color: var(--mat-sys-error);
+}
+
+.empty-icon {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+/* --- Mobile --- */
+
+.mobile-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+mat-card.deleting {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+mat-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.delete-btn {
+  color: var(--mat-sys-error);
+}
+
+/* --- Desktop --- */
+
+.desktop-table {
+  display: none;
+}
+
+table {
+  width: 100%;
+}
+
+.table-actions {
+  display: flex;
+  gap: 4px;
+}
+
+tr.deleting {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+@media (min-width: 900px) {
+  .mobile-list {
+    display: none;
+  }
+
+  .desktop-table {
+    display: block;
+  }
+}
