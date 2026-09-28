@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 
+import { AdminOrderList } from './admin-order-list/admin-order-list';
 import { CartPage } from './cart-page/cart-page';
 import { NotFound } from './not-found/not-found';
 import { OrderDetail } from './order-detail/order-detail';
@@ -16,6 +17,8 @@ export const routes: Routes = [
   { path: 'carrito', component: CartPage, canActivate: [authGuard, roleGuard('cliente')] },
   { path: 'mis-pedidos', component: OrderList, canActivate: [authGuard, roleGuard('cliente')] },
   { path: 'pedido/:id', component: OrderDetail, canActivate: [authGuard] },
+  { path: 'admin/pedidos', component: AdminOrderList, canActivate: [authGuard, roleGuard('owner')] },
   { path: '**', component: NotFound },
 ];
+
 
