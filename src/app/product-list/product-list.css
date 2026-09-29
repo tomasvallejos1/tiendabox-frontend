@@ -1,0 +1,120 @@
+.product-list-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+h1 {
+  font: var(--mat-sys-headline-medium);
+  color: var(--mat-sys-on-surface);
+  margin: 0 0 24px;
+}
+
+/* --- Filtros --- */
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.filters mat-form-field {
+  flex: 1 1 200px;
+  max-width: 280px;
+}
+
+/* --- Estados: loading, error, vacío --- */
+
+.state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 64px 16px;
+  text-align: center;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.error-panel .error-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  color: var(--mat-sys-error);
+}
+
+.empty-panel .empty-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+/* --- Conteo de resultados --- */
+
+.result-count {
+  color: var(--mat-sys-on-surface-variant);
+  margin: 0 0 16px;
+  font: var(--mat-sys-body-medium);
+}
+
+/* --- Grilla de productos --- */
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.product-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.product-card mat-card-content {
+  flex: 1;
+}
+
+/* --- Precio y stock --- */
+
+.price {
+  font: var(--mat-sys-title-large);
+  color: var(--mat-sys-primary);
+  margin: 12px 0 4px;
+}
+
+.price.encargo {
+  color: var(--mat-sys-tertiary);
+  font: var(--mat-sys-title-medium);
+}
+
+.stock {
+  font: var(--mat-sys-body-small);
+  margin: 0 0 8px;
+}
+
+.stock.available {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.stock.out-of-stock {
+  color: var(--mat-sys-error);
+  font-weight: 500;
+}
+
+.encargo-hint {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+  margin: 0 0 8px;
+  font-style: italic;
+}
+
+/* --- Acciones --- */
+
+mat-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

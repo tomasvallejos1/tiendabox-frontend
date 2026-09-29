@@ -1,0 +1,121 @@
+<section class="admin-category-list-container">
+  <div class="header">
+    <h1>Administrar categorías</h1>
+    <a matFab="extended" routerLink="/admin/categorias/new" class="new-btn">
+      <mat-icon>add</mat-icon>
+      Nueva categoría
+    </a>
+  </div>
+
+  @if (loading()) {
+    <div class="state-container" role="status" aria-live="polite">
+      <mat-spinner diameter="48" />
+      <p>Cargando categorías…</p>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="state-container error-panel" role="alert">
+      <mat-icon class="state-icon error-icon">error_outline</mat-icon>
+      <p>{{ errorMessage() }}</p>
+      <button matButton="filled" (click)="ngOnInit()">
+        <mat-icon>refresh</mat-icon>
+        Reintentar
+      </button>
+    </div>
+  } @else if (dataSource().length === 0) {
+    <div class="state-container empty-panel">
+      <mat-icon class="state-icon empty-icon">category</mat-icon>
+      <p>No hay categorías cargadas todavía.</p>
+      <a matButton="filled" routerLink="/admin/categorias/new">
+        <mat-icon>add</mat-icon>
+        Crear la primera categoría
+      </a>
+    </div>
+  } @else {
+    <!-- ========== MOBILE: lista de cards ========== -->
+    <div class="mobile-list">
+      @for (cat of dataSource(); track cat.id) {
+        <mat-card [class.deleting]="deletingIds().has(cat.id)">
+          <mat-card-header>
+            <mat-card-title>{{ cat.name }}</mat-card-title>
+            @if (cat.description) {
+              <mat-card-subtitle>{{ cat.description }}</mat-card-subtitle>
+            }
+          </mat-card-header>
+
+          <mat-card-actions align="end">
+            <a
+              matButton="outlined"
+              [routerLink]="['/admin/categorias', cat.id, 'edit']"
+            >
+              <mat-icon>edit</mat-icon>
+              Editar
+            </a>
+            <button
+              matButton="outlined"
+              (click)="confirmDelete(cat.id, cat.name)"
+              [disabled]="deletingIds().has(cat.id)"
+              class="delete-btn"
+            >
+              @if (deletingIds().has(cat.id)) {
+                <mat-spinner diameter="18" />
+              } @else {
+                <mat-icon>delete</mat-icon>
+              }
+              Borrar
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      }
+    </div>
+
+    <!-- ========== DESKTOP: tabla ========== -->
+    <div class="desktop-table">
+      <table mat-table [dataSource]="dataSource()">
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Nombre</th>
+          <td mat-cell *matCellDef="let cat">{{ cat.name }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="description">
+          <th mat-header-cell *matHeaderCellDef>Descripción</th>
+          <td mat-cell *matCellDef="let cat">{{ cat.description ?? '—' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Acciones</th>
+          <td mat-cell *matCellDef="let cat">
+            <div class="table-actions">
+              <a
+                matIconButton
+                [routerLink]="['/admin/categorias', cat.id, 'edit']"
+                aria-label="Editar"
+              >
+                <mat-icon>edit</mat-icon>
+              </a>
+              <button
+                matIconButton
+                (click)="confirmDelete(cat.id, cat.name)"
+                [disabled]="deletingIds().has(cat.id)"
+                aria-label="Borrar"
+                class="delete-btn"
+              >
+                @if (deletingIds().has(cat.id)) {
+                  <mat-spinner diameter="18" />
+                } @else {
+                  <mat-icon>delete</mat-icon>
+                }
+              </button>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr
+          mat-row
+          *matRowDef="let row; columns: displayedColumns"
+          [class.deleting]="deletingIds().has(row.id)"
+        ></tr>
+      </table>
+    </div>
+  }
+</section>

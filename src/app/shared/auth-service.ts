@@ -35,17 +35,24 @@ export class AuthService {
 
   // La sesión arranca desde localStorage para sobrevivir a un refresh de la página.
   private readonly currentUser = signal<SessionUser | null>(readStoredUser());
-  private readonly token = signal<string | null>(localStorage.getItem(TOKEN_KEY));
+  private readonly accessToken = signal<string | null>(localStorage.getItem(TOKEN_KEY));
 
   readonly user = this.currentUser.asReadonly();
-  readonly isLoggedIn = computed(() => this.token() !== null);
+  readonly isLoggedIn = computed(() => this.accessToken() !== null);
   readonly isOwner = computed(() => this.currentUser()?.role === 'owner');
   readonly isCliente = computed(() => this.currentUser()?.role === 'cliente');
+  readonly isAdmin = computed(
+    () => this.currentUser()?.role === 'admin' || this.currentUser()?.role === 'owner',
+  );
 
   constructor(private http: HttpClient) {}
 
   getToken(): string | null {
-    return this.token();
+    return this.accessToken();
+  }
+
+  token(): string | null {
+    return this.accessToken();
   }
 
   getCustomerId(): string | null {
@@ -63,7 +70,7 @@ export class AuthService {
         };
         localStorage.setItem(TOKEN_KEY, response.token);
         localStorage.setItem(USER_KEY, JSON.stringify(user));
-        this.token.set(response.token);
+        this.accessToken.set(response.token);
         this.currentUser.set(user);
       }),
     );
@@ -84,7 +91,7 @@ export class AuthService {
   clearSession(): void {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
-    this.token.set(null);
+    this.accessToken.set(null);
     this.currentUser.set(null);
   }
 }

@@ -1,0 +1,55 @@
+<section class="category-form-container">
+  @if (loading()) {
+    <div class="state-container" role="status" aria-live="polite">
+      <mat-spinner diameter="48" />
+      <p>Cargando categoría…</p>
+    </div>
+  } @else if (loadFailed()) {
+    <div class="state-container error-panel" role="alert">
+      <mat-icon class="state-icon error-icon">error_outline</mat-icon>
+      <p>No se pudo cargar la categoría.</p>
+      <a matButton="filled" routerLink="/admin/categorias">
+        <mat-icon>arrow_back</mat-icon>
+        Volver al listado
+      </a>
+    </div>
+  } @else {
+    <h1>{{ isEditing() ? 'Editar categoría' : 'Nueva categoría' }}</h1>
+
+    @if (errorMessage()) {
+      <div class="error-banner" role="alert">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <mat-form-field>
+        <mat-label>Nombre</mat-label>
+        <input matInput formControlName="name" maxlength="100" />
+        @if (form.controls.name.hasError('required')) {
+          <mat-error>El nombre es obligatorio.</mat-error>
+        } @else if (form.controls.name.hasError('pattern')) {
+          <mat-error>El nombre no puede estar vacío.</mat-error>
+        } @else if (form.controls.name.hasError('maxlength')) {
+          <mat-error>Máximo 100 caracteres.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Descripción</mat-label>
+        <textarea matInput formControlName="description" rows="3"></textarea>
+      </mat-form-field>
+
+      <div class="form-actions">
+        <a matButton="outlined" routerLink="/admin/categorias">Cancelar</a>
+        <button matButton="filled" type="submit" [disabled]="saving()">
+          @if (saving()) {
+            <mat-spinner diameter="18" />
+          }
+          {{ isEditing() ? 'Guardar cambios' : 'Crear categoría' }}
+        </button>
+      </div>
+    </form>
+  }
+</section>

@@ -1,0 +1,121 @@
+<section class="admin-brand-list-container">
+  <div class="header">
+    <h1>Administrar marcas</h1>
+    <a matFab="extended" routerLink="/admin/marcas/new" class="new-btn">
+      <mat-icon>add</mat-icon>
+      Nueva marca
+    </a>
+  </div>
+
+  @if (loading()) {
+    <div class="state-container" role="status" aria-live="polite">
+      <mat-spinner diameter="48" />
+      <p>Cargando marcas…</p>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="state-container error-panel" role="alert">
+      <mat-icon class="state-icon error-icon">error_outline</mat-icon>
+      <p>{{ errorMessage() }}</p>
+      <button matButton="filled" (click)="ngOnInit()">
+        <mat-icon>refresh</mat-icon>
+        Reintentar
+      </button>
+    </div>
+  } @else if (dataSource().length === 0) {
+    <div class="state-container empty-panel">
+      <mat-icon class="state-icon empty-icon">branding_watermark</mat-icon>
+      <p>No hay marcas cargadas todavía.</p>
+      <a matButton="filled" routerLink="/admin/marcas/new">
+        <mat-icon>add</mat-icon>
+        Crear la primera marca
+      </a>
+    </div>
+  } @else {
+    <!-- ========== MOBILE: lista de cards ========== -->
+    <div class="mobile-list">
+      @for (brand of dataSource(); track brand.id) {
+        <mat-card [class.deleting]="deletingIds().has(brand.id)">
+          <mat-card-header>
+            <mat-card-title>{{ brand.name }}</mat-card-title>
+            @if (brand.logo_url) {
+              <mat-card-subtitle>{{ brand.logo_url }}</mat-card-subtitle>
+            }
+          </mat-card-header>
+
+          <mat-card-actions align="end">
+            <a
+              matButton="outlined"
+              [routerLink]="['/admin/marcas', brand.id, 'edit']"
+            >
+              <mat-icon>edit</mat-icon>
+              Editar
+            </a>
+            <button
+              matButton="outlined"
+              (click)="confirmDelete(brand.id, brand.name)"
+              [disabled]="deletingIds().has(brand.id)"
+              class="delete-btn"
+            >
+              @if (deletingIds().has(brand.id)) {
+                <mat-spinner diameter="18" />
+              } @else {
+                <mat-icon>delete</mat-icon>
+              }
+              Borrar
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      }
+    </div>
+
+    <!-- ========== DESKTOP: tabla ========== -->
+    <div class="desktop-table">
+      <table mat-table [dataSource]="dataSource()">
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Nombre</th>
+          <td mat-cell *matCellDef="let brand">{{ brand.name }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="logo_url">
+          <th mat-header-cell *matHeaderCellDef>Logo URL</th>
+          <td mat-cell *matCellDef="let brand">{{ brand.logo_url ?? '—' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Acciones</th>
+          <td mat-cell *matCellDef="let brand">
+            <div class="table-actions">
+              <a
+                matIconButton
+                [routerLink]="['/admin/marcas', brand.id, 'edit']"
+                aria-label="Editar"
+              >
+                <mat-icon>edit</mat-icon>
+              </a>
+              <button
+                matIconButton
+                (click)="confirmDelete(brand.id, brand.name)"
+                [disabled]="deletingIds().has(brand.id)"
+                aria-label="Borrar"
+                class="delete-btn"
+              >
+                @if (deletingIds().has(brand.id)) {
+                  <mat-spinner diameter="18" />
+                } @else {
+                  <mat-icon>delete</mat-icon>
+                }
+              </button>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr
+          mat-row
+          *matRowDef="let row; columns: displayedColumns"
+          [class.deleting]="deletingIds().has(row.id)"
+        ></tr>
+      </table>
+    </div>
+  }
+</section>
