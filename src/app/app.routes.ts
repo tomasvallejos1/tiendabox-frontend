@@ -2,10 +2,12 @@ import { Routes } from '@angular/router';
 
 import { AdminOrderList } from './admin-order-list/admin-order-list';
 import { CartPage } from './cart-page/cart-page';
+import { Login } from './login/login';
 import { NotFound } from './not-found/not-found';
 import { OrderDetail } from './order-detail/order-detail';
 import { OrderList } from './order-list/order-list';
 import { Profile } from './profile/profile';
+import { Register } from './register/register';
 import { AdminBrandList } from './admin-brand-list/admin-brand-list';
 import { AdminCategoryList } from './admin-category-list/admin-category-list';
 import { AdminProductList } from './admin-product-list/admin-product-list';
@@ -21,6 +23,8 @@ import { roleGuard } from './shared/role-guard';
 // Las rutas nuevas se agregan ANTES del comodín '**', que siempre va último.
 export const routes: Routes = [
   { path: '', redirectTo: '/productos', pathMatch: 'full' },
+  { path: 'login', component: Login },
+  { path: 'registro', component: Register },
   { path: 'perfil', component: Profile, canActivate: [authGuard] },
   { path: 'carrito', component: CartPage, canActivate: [authGuard, roleGuard('cliente')] },
   { path: 'mis-pedidos', component: OrderList, canActivate: [authGuard, roleGuard('cliente')] },
