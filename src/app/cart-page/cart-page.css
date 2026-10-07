@@ -65,6 +65,13 @@
   min-width: 0;
 }
 
+.item-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+
 .item-name {
   font-weight: 500;
   color: var(--mat-sys-on-surface);
@@ -155,6 +162,27 @@
 .field-error {
   font-size: 12px;
   color: var(--mat-sys-error);
+  margin: 0;
+}
+
+/* Aviso de productos por encargo, justo antes del botón de confirmar */
+.encargo-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--mat-sys-tertiary-container);
+  color: var(--mat-sys-on-tertiary-container);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.encargo-notice mat-icon {
+  flex-shrink: 0;
+}
+
+.encargo-notice p {
   margin: 0;
 }
 

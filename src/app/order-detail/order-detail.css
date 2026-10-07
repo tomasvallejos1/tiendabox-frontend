@@ -70,6 +70,18 @@
   gap: 4px;
 }
 
+.item-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+
+.price-pending {
+  font-style: italic;
+  color: var(--mat-sys-on-surface-variant);
+}
+
 .item-name {
   font-weight: 500;
   color: var(--mat-sys-on-surface);

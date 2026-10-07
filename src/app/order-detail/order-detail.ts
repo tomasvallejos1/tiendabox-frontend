@@ -12,6 +12,7 @@ import { Order } from '../shared/order';
 import { OrderService } from '../shared/order-service';
 import { AuthService } from '../shared/auth-service';
 import { OrderStatusBadge } from '../order-status-badge/order-status-badge';
+import { ProductTypeBadge } from '../product-type-badge/product-type-badge';
 
 @Component({
   selector: 'app-order-detail',
@@ -24,6 +25,7 @@ import { OrderStatusBadge } from '../order-status-badge/order-status-badge';
     MatProgressSpinnerModule,
     MatTableModule,
     OrderStatusBadge,
+    ProductTypeBadge,
   ],
   templateUrl: './order-detail.html',
   styleUrl: './order-detail.css',

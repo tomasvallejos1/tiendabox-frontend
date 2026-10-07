@@ -90,6 +90,17 @@ export class AdminOrderList implements OnInit {
     return next ? STATUS_LABELS[next] : null;
   }
 
+  /** Resumen de ítems por tipo, por ejemplo "2 en stock, 1 por encargo". */
+  protected typeSummary(order: Order): string {
+    const stock = order.items.filter((item) => item.type === 'stock').length;
+    const encargo = order.items.filter((item) => item.type === 'encargo').length;
+
+    const parts: string[] = [];
+    if (stock > 0) parts.push(`${stock} en stock`);
+    if (encargo > 0) parts.push(`${encargo} por encargo`);
+    return parts.join(', ');
+  }
+
   protected isFinalState(order: Order): boolean {
     return order.status === 'entregado' || order.status === 'cancelado';
   }

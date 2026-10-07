@@ -30,13 +30,16 @@
         >
           <mat-card-content class="item-content">
             <div class="item-info">
-              <span class="item-name">
-                @if (item.name) {
-                  {{ item.name }}
-                } @else {
-                  Producto no disponible
-                }
-              </span>
+              <div class="item-heading">
+                <span class="item-name">
+                  @if (item.name) {
+                    {{ item.name }}
+                  } @else {
+                    Producto no disponible
+                  }
+                </span>
+                <app-product-type-badge [type]="item.type" />
+              </div>
 
               @if (!item.available) {
                 <span class="item-warning unavailable-warning">Ya no está disponible</span>
@@ -147,6 +150,17 @@
               <p class="error-message">{{ errorMessage() }}</p>
             }
 
+            @if (cart()!.has_encargo_items) {
+              <div class="encargo-notice" role="note">
+                <mat-icon>info</mat-icon>
+                <p>
+                  <strong>Tu pedido incluye productos por encargo.</strong>
+                  Su precio todavía no está cerrado: te lo confirmamos después de recibir el
+                  pedido, y el total de arriba no los incluye.
+                </p>
+              </div>
+            }
+
             <div class="checkout-actions">
               <button
                 matButton="filled"
@@ -155,6 +169,8 @@
               >
                 @if (confirming()) {
                   Confirmando…
+                } @else if (cart()!.has_encargo_items) {
+                  Confirmar pedido (precio a confirmar)
                 } @else {
                   Confirmar pedido
                 }

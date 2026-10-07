@@ -17,6 +17,7 @@ import { Cart, CartItem } from '../shared/cart';
 import { CartService } from '../shared/cart-service';
 import { CustomerService } from '../shared/customer-service';
 import { OrderService } from '../shared/order-service';
+import { ProductTypeBadge } from '../product-type-badge/product-type-badge';
 
 @Component({
   selector: 'app-cart-page',
@@ -32,6 +33,7 @@ import { OrderService } from '../shared/order-service';
     MatProgressSpinnerModule,
     MatRadioModule,
     MatSnackBarModule,
+    ProductTypeBadge,
   ],
   templateUrl: './cart-page.html',
   styleUrl: './cart-page.css',

@@ -1,0 +1,20 @@
+:host {
+  display: inline-block;
+}
+
+/* Chip chico: va al lado del nombre del producto */
+mat-chip {
+  --mat-chip-container-height: 24px;
+  --mat-chip-label-text-size: 12px;
+  --mat-chip-label-text-line-height: 16px;
+}
+
+.type-stock {
+  --mat-chip-elevated-container-color: #2e7d32;
+  --mat-chip-label-text-color: #fff;
+}
+
+.type-encargo {
+  --mat-chip-elevated-container-color: #f9a825;
+  --mat-chip-label-text-color: #fff;
+}
