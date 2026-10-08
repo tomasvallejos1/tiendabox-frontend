@@ -1,12 +1,14 @@
 import { ProductImage } from '../product-image/product-image';
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, computed, OnInit, signal } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatInputModule } from '@angular/material/input';
+import { ProductTypeBadge } from '../product-type-badge/product-type-badge';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { finalize, forkJoin, timeout } from 'rxjs';
@@ -30,7 +32,9 @@ import { CartService } from '../shared/cart-service';
     MatCardModule,
     MatFormFieldModule,
     MatIconModule,
-    MatProgressSpinnerModule,
+    MatChipsModule,
+    MatInputModule,
+    ProductTypeBadge,
     MatSelectModule,
     MatSnackBarModule,
   ],
@@ -46,6 +50,31 @@ export class ProductList implements OnInit {
 
   protected selectedCategoryId = signal<string | null>(null);
   protected selectedBrandId = signal<string | null>(null);
+  protected readonly search = signal('');
+  protected readonly sort = signal('recent');
+  protected readonly filtersOpen = signal(false);
+  protected readonly skeletons = [1, 2, 3, 4, 5, 6];
+  protected readonly hasFilters = computed(
+    () => !!(this.search().trim() || this.selectedCategoryId() || this.selectedBrandId()),
+  );
+  protected readonly visibleProducts = computed(() => {
+    const query = this.search().trim().toLocaleLowerCase();
+    const products = this.products().filter((product) =>
+      product.name.toLocaleLowerCase().includes(query),
+    );
+    if (this.sort() === 'name') return products.sort((a, b) => a.name.localeCompare(b.name, 'es'));
+    if (this.sort() === 'price-asc' || this.sort() === 'price-desc') {
+      const direction = this.sort() === 'price-asc' ? 1 : -1;
+      return products.sort((a, b) => {
+        const aUnpriced = a.type === 'encargo' || a.price === null;
+        const bUnpriced = b.type === 'encargo' || b.price === null;
+        if (aUnpriced || bUnpriced) return Number(aUnpriced) - Number(bUnpriced);
+        return direction * (a.price! - b.price!);
+      });
+    }
+    // Product no expone fecha de creación: conservar el orden recibido de la API.
+    return products;
+  });
 
   constructor(
     private productService: ProductService,
@@ -58,6 +87,7 @@ export class ProductList implements OnInit {
 
   ngOnInit(): void {
     this.loading.set(true);
+    this.errorMessage.set('');
     forkJoin([this.categoryService.getCategories(), this.brandService.getBrands()]).subscribe({
       next: ([cats, brands]) => {
         this.categories.set(cats);
@@ -106,9 +136,11 @@ export class ProductList implements OnInit {
   }
 
   clearFilters(): void {
+    const hadApiFilters = !!(this.selectedCategoryId() || this.selectedBrandId());
+    this.search.set('');
     this.selectedCategoryId.set(null);
     this.selectedBrandId.set(null);
-    this.loadProducts();
+    if (hadApiFilters) this.loadProducts();
   }
 
   getCategoryName(id: string): string {
