@@ -1,6 +1,8 @@
 import { Routes } from '@angular/router';
 
 import { AdminLayout } from './admin-layout/admin-layout';
+import { AdminCustomerList } from './admin-customer-list/admin-customer-list';
+import { CustomerForm } from './customer-form/customer-form';
 import { AdminOrderList } from './admin-order-list/admin-order-list';
 import { CartPage } from './cart-page/cart-page';
 import { Login } from './login/login';
@@ -41,6 +43,9 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'pedidos', pathMatch: 'full' },
       { path: 'pedidos', component: AdminOrderList },
+      { path: 'clientes', component: AdminCustomerList },
+      { path: 'clientes/new', component: CustomerForm },
+      { path: 'clientes/:id/edit', component: CustomerForm },
       { path: 'productos', component: AdminProductList },
       { path: 'productos/new', component: ProductForm },
       { path: 'productos/:id/edit', component: ProductForm },

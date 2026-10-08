@@ -1,0 +1,71 @@
+.customers-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+mat-form-field {
+  width: 100%;
+  min-width: 0;
+}
+mat-button-toggle-group {
+  align-self: flex-start;
+  max-width: 100%;
+}
+mat-button-toggle {
+  --mat-button-toggle-label-text-size: 12px;
+}
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 48px 16px;
+  text-align: center;
+}
+.mobile-list {
+  display: grid;
+  gap: 12px;
+}
+mat-card-content,
+td {
+  overflow-wrap: anywhere;
+}
+.local-chip {
+  --mat-chip-elevated-container-color: var(--mat-sys-surface-container);
+  --mat-chip-label-text-color: var(--mat-sys-on-surface-variant);
+}
+.desktop-table {
+  display: none;
+  overflow-x: auto;
+}
+table {
+  width: 100%;
+}
+.table-actions {
+  display: flex;
+}
+@media (min-width: 900px) {
+  .mobile-list {
+    display: none;
+  }
+  .desktop-table {
+    display: block;
+  }
+  .filters {
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+  }
+  mat-form-field {
+    max-width: 400px;
+  }
+  mat-button-toggle-group {
+    align-self: center;
+  }
+}

@@ -1,0 +1,134 @@
+<section class="customers-container">
+  <div class="panel-section-header">
+    <h1>Clientes</h1>
+    <a mat-flat-button routerLink="/admin/clientes/new" class="panel-primary-action">
+      <mat-icon>add</mat-icon>Nuevo cliente
+    </a>
+  </div>
+  <div class="filters">
+    <mat-form-field>
+      <mat-label>Buscar por nombre, email o CUIT</mat-label>
+      <input matInput [value]="search()" (input)="search.set($any($event.target).value)" />
+      <mat-icon matPrefix>search</mat-icon>
+    </mat-form-field>
+    <mat-button-toggle-group
+      aria-label="Tipo de cliente"
+      [value]="accountFilter()"
+      (change)="accountFilter.set($event.value)"
+    >
+      <mat-button-toggle value="all">Todos</mat-button-toggle>
+      <mat-button-toggle value="web">Con cuenta web</mat-button-toggle>
+      <mat-button-toggle value="local">De local</mat-button-toggle>
+    </mat-button-toggle-group>
+  </div>
+  @if (loading()) {
+    <div class="state" role="status">
+      <mat-spinner diameter="48" />
+      <p>Cargando clientes…</p>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="state" role="alert">
+      <mat-icon>error_outline</mat-icon>
+      <p>{{ errorMessage() }}</p>
+      <button mat-flat-button (click)="loadCustomers()">Reintentar</button>
+    </div>
+  } @else if (filteredCustomers().length === 0) {
+    <div class="panel-empty-state">
+      <mat-icon class="panel-empty-icon">people_outline</mat-icon>
+      @if (customers().length === 0) {
+        <p>Todavía no hay clientes. Registrá el primero para gestionar sus pedidos.</p>
+        <a mat-flat-button routerLink="/admin/clientes/new"
+          ><mat-icon>add</mat-icon>Nuevo cliente</a
+        >
+      } @else {
+        <p>No hay clientes que coincidan con los filtros.</p>
+        <button mat-button (click)="clearFilters()">Limpiar filtros</button>
+      }
+    </div>
+  } @else {
+    <div class="mobile-list">
+      @for (customer of filteredCustomers(); track customer.id) {
+        <mat-card>
+          <mat-card-header
+            ><mat-card-title>{{ customer.name }}</mat-card-title></mat-card-header
+          >
+          <mat-card-content>
+            @if (customer.email === null) {
+              <mat-chip-set><mat-chip class="local-chip">Sin cuenta web</mat-chip></mat-chip-set>
+            } @else {
+              <p>{{ customer.email }}</p>
+            }
+            <p>Teléfono: {{ customer.phone || 'Sin teléfono' }}</p>
+            <p>{{ taxStatusLabel(customer.tax_status) }}</p>
+          </mat-card-content>
+          <mat-card-actions>
+            <a matButton="outlined" [routerLink]="['/admin/clientes', customer.id, 'edit']">
+              <mat-icon>edit</mat-icon>Editar
+            </a>
+            <button
+              matButton="outlined"
+              class="panel-destructive-action"
+              [disabled]="deletingIds().has(customer.id)"
+              (click)="confirmDelete(customer)"
+            >
+              <mat-icon>delete</mat-icon
+              >{{ deletingIds().has(customer.id) ? 'Eliminando…' : 'Eliminar' }}
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      }
+    </div>
+    <div class="desktop-table">
+      <table mat-table [dataSource]="filteredCustomers()">
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Nombre</th>
+          <td mat-cell *matCellDef="let customer">{{ customer.name }}</td>
+        </ng-container>
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef>Email</th>
+          <td mat-cell *matCellDef="let customer">
+            @if (customer.email === null) {
+              <mat-chip-set><mat-chip class="local-chip">Sin cuenta web</mat-chip></mat-chip-set>
+            } @else {
+              {{ customer.email }}
+            }
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="phone">
+          <th mat-header-cell *matHeaderCellDef>Teléfono</th>
+          <td mat-cell *matCellDef="let customer">{{ customer.phone || 'Sin teléfono' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="tax_status">
+          <th mat-header-cell *matHeaderCellDef>Condición fiscal</th>
+          <td mat-cell *matCellDef="let customer">{{ taxStatusLabel(customer.tax_status) }}</td>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Acciones</th>
+          <td mat-cell *matCellDef="let customer">
+            <div class="table-actions">
+              <a
+                mat-icon-button
+                [routerLink]="['/admin/clientes', customer.id, 'edit']"
+                matTooltip="Editar cliente"
+                aria-label="Editar cliente"
+                ><mat-icon>edit</mat-icon></a
+              >
+              <button
+                mat-icon-button
+                matTooltip="Eliminar cliente"
+                aria-label="Eliminar cliente"
+                class="panel-destructive-action"
+                [disabled]="deletingIds().has(customer.id)"
+                (click)="confirmDelete(customer)"
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </div>
+  }
+</section>
