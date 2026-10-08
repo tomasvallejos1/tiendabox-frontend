@@ -64,7 +64,7 @@ h1 {
 
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
   gap: 16px;
 }
 
@@ -117,4 +117,13 @@ mat-card-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.product-card {
+  min-width: 0;
+  overflow: hidden;
+}
+.product-card mat-card-title,
+.product-card mat-card-subtitle {
+  overflow-wrap: anywhere;
 }

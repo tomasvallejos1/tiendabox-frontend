@@ -1,3 +1,4 @@
+import { ProductImage } from '../product-image/product-image';
 import { Component, OnInit, signal } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -22,6 +23,7 @@ import { CartService } from '../shared/cart-service';
 @Component({
   selector: 'app-product-list',
   imports: [
+    ProductImage,
     CurrencyPipe,
     RouterLink,
     MatButtonModule,

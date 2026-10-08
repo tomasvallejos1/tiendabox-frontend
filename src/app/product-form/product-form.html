@@ -41,6 +41,20 @@
         <textarea matInput formControlName="description" rows="3"></textarea>
       </mat-form-field>
 
+      <div class="image-field">
+        <mat-form-field>
+          <mat-label>URL de la imagen</mat-label>
+          <input matInput type="url" formControlName="image_url" />
+          <mat-hint>Pegá el enlace de una imagen (http:// o https://)</mat-hint>
+          @if (form.controls.image_url.hasError('pattern')) {
+            <mat-error>El enlace debe empezar con http:// o https://.</mat-error>
+          }
+        </mat-form-field>
+        <app-product-image
+          [url]="form.controls.image_url.value"
+          [name]="form.controls.name.value || 'Vista previa del producto'"
+        />
+      </div>
       <mat-form-field>
         <mat-label>Tipo</mat-label>
         <mat-select formControlName="type">

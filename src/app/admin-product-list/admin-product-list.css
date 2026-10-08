@@ -6,15 +6,6 @@
 
 /* --- Header --- */
 
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
 h1 {
   font: var(--mat-sys-headline-medium);
   color: var(--mat-sys-on-surface);
@@ -42,10 +33,6 @@ h1 {
 
 .error-icon {
   color: var(--mat-sys-error);
-}
-
-.empty-icon {
-  color: var(--mat-sys-on-surface-variant);
 }
 
 /* --- Mobile: lista de cards (default) --- */
@@ -84,10 +71,6 @@ mat-card-actions {
   gap: 8px;
 }
 
-.delete-btn {
-  color: var(--mat-sys-error);
-}
-
 /* --- Desktop: tabla (oculta por default) --- */
 
 .desktop-table {
@@ -118,4 +101,18 @@ tr.deleting {
   .desktop-table {
     display: block;
   }
+}
+
+.admin-thumbnail {
+  margin-right: 12px;
+}
+td app-product-image {
+  margin-block: 8px;
+}
+.desktop-table {
+  overflow-x: auto;
+}
+mat-card,
+mat-card-header {
+  min-width: 0;
 }

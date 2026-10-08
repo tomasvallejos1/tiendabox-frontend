@@ -4,10 +4,7 @@
   <div class="filters">
     <mat-form-field>
       <mat-label>Categoría</mat-label>
-      <mat-select
-        [value]="selectedCategoryId()"
-        (selectionChange)="onCategoryChange($event.value)"
-      >
+      <mat-select [value]="selectedCategoryId()" (selectionChange)="onCategoryChange($event.value)">
         <mat-option [value]="null">Todas</mat-option>
         @for (cat of categories(); track cat.id) {
           <mat-option [value]="cat.id">{{ cat.name }}</mat-option>
@@ -17,10 +14,7 @@
 
     <mat-form-field>
       <mat-label>Marca</mat-label>
-      <mat-select
-        [value]="selectedBrandId()"
-        (selectionChange)="onBrandChange($event.value)"
-      >
+      <mat-select [value]="selectedBrandId()" (selectionChange)="onBrandChange($event.value)">
         <mat-option [value]="null">Todas</mat-option>
         @for (brand of brands(); track brand.id) {
           <mat-option [value]="brand.id">{{ brand.name }}</mat-option>
@@ -49,7 +43,11 @@
       </button>
     </div>
   } @else {
-    <p class="result-count">{{ products().length }} producto{{ products().length !== 1 ? 's' : '' }} encontrado{{ products().length !== 1 ? 's' : '' }}</p>
+    <p class="result-count">
+      {{ products().length }} producto{{ products().length !== 1 ? 's' : '' }} encontrado{{
+        products().length !== 1 ? 's' : ''
+      }}
+    </p>
 
     @if (products().length === 0) {
       <div class="state-container empty-panel">
@@ -60,6 +58,7 @@
       <div class="product-grid">
         @for (product of products(); track product.id) {
           <mat-card class="product-card">
+            <app-product-image [url]="product.image_url" [name]="product.name" />
             <mat-card-header>
               <mat-card-title>{{ product.name }}</mat-card-title>
               <mat-card-subtitle>
@@ -69,9 +68,13 @@
 
             <mat-card-content>
               @if (product.type === 'stock') {
-                <p class="price">{{ product.price | currency: 'ARS' : 'symbol-narrow' : '1.2-2' }}</p>
+                <p class="price">
+                  {{ product.price | currency: 'ARS' : 'symbol-narrow' : '1.2-2' }}
+                </p>
                 @if (product.stock > 0) {
-                  <p class="stock available">{{ product.stock }} disponible{{ product.stock !== 1 ? 's' : '' }}</p>
+                  <p class="stock available">
+                    {{ product.stock }} disponible{{ product.stock !== 1 ? 's' : '' }}
+                  </p>
                 } @else {
                   <p class="stock out-of-stock">Sin stock</p>
                 }

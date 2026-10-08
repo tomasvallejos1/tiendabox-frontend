@@ -29,6 +29,7 @@
     </a>
 
     <mat-card class="detail-card">
+      <app-product-image [url]="p.image_url" [name]="p.name" size="large" />
       <mat-card-header>
         <mat-card-title>{{ p.name }}</mat-card-title>
       </mat-card-header>
@@ -55,9 +56,7 @@
           <div class="price-block">
             <p class="price">{{ p.price | currency: 'ARS' : 'symbol-narrow' : '1.2-2' }}</p>
             @if (p.stock > 0) {
-              <p class="stock available">
-                {{ p.stock }} disponible{{ p.stock !== 1 ? 's' : '' }}
-              </p>
+              <p class="stock available">{{ p.stock }} disponible{{ p.stock !== 1 ? 's' : '' }}</p>
             } @else {
               <p class="stock out-of-stock">Sin stock disponible</p>
             }

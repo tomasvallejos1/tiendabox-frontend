@@ -1,3 +1,4 @@
+import { ProductImage } from '../product-image/product-image';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -20,6 +21,7 @@ import { BrandService } from '../shared/brand-service';
 @Component({
   selector: 'app-product-form',
   imports: [
+    ProductImage,
     ReactiveFormsModule,
     RouterLink,
     MatButtonModule,
@@ -39,6 +41,7 @@ export class ProductForm implements OnInit {
   protected readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.pattern(/\S/), Validators.maxLength(100)]],
     description: [''],
+    image_url: ['', Validators.pattern(/^https?:\/\//)],
     type: ['stock' as ProductType, Validators.required],
     price: [0, [Validators.required, Validators.min(0.01)]],
     stock: [0, [Validators.required, Validators.min(0)]],
@@ -85,6 +88,7 @@ export class ProductForm implements OnInit {
           this.form.patchValue({
             name: product.name,
             description: product.description ?? '',
+            image_url: product.image_url ?? '',
             type: product.type,
             price: product.price ?? 0,
             stock: product.stock,
@@ -126,7 +130,8 @@ export class ProductForm implements OnInit {
     this.errorMessage.set('');
 
     const id = this.productId();
-    const value = this.form.getRawValue();
+    const rawValue = this.form.getRawValue();
+    const value = { ...rawValue, image_url: rawValue.image_url || null };
     const request$ = id
       ? this.productService.updateProduct(id, value)
       : this.productService.createProduct(value);

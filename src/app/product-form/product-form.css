@@ -66,3 +66,13 @@ form mat-form-field {
   gap: 12px;
   margin-top: 16px;
 }
+
+.image-field {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+  margin-bottom: 20px;
+}
+.image-field mat-form-field {
+  min-width: 0;
+}

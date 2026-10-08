@@ -1,3 +1,4 @@
+import { ProductImage } from '../product-image/product-image';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -20,6 +21,7 @@ import { BrandService } from '../shared/brand-service';
 @Component({
   selector: 'app-admin-product-list',
   imports: [
+    ProductImage,
     CurrencyPipe,
     RouterLink,
     MatButtonModule,
@@ -39,6 +41,7 @@ export class AdminProductList implements OnInit {
   protected readonly deletingIds = signal<ReadonlySet<string>>(new Set());
 
   protected readonly displayedColumns = [
+    'image',
     'name',
     'type',
     'price',
