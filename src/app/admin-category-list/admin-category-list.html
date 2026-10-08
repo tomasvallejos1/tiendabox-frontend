@@ -1,7 +1,7 @@
 <section class="admin-category-list-container">
-  <div class="header">
-    <h1>Administrar categorías</h1>
-    <a matFab="extended" routerLink="/admin/categorias/new" class="new-btn">
+  <div class="panel-section-header">
+    <h1>Categorías</h1>
+    <a mat-flat-button routerLink="/admin/categorias/new" class="panel-primary-action">
       <mat-icon>add</mat-icon>
       Nueva categoría
     </a>
@@ -16,18 +16,18 @@
     <div class="state-container error-panel" role="alert">
       <mat-icon class="state-icon error-icon">error_outline</mat-icon>
       <p>{{ errorMessage() }}</p>
-      <button matButton="filled" (click)="ngOnInit()">
+      <button mat-flat-button (click)="ngOnInit()">
         <mat-icon>refresh</mat-icon>
         Reintentar
       </button>
     </div>
   } @else if (dataSource().length === 0) {
-    <div class="state-container empty-panel">
-      <mat-icon class="state-icon empty-icon">category</mat-icon>
+    <div class="panel-empty-state">
+      <mat-icon class="panel-empty-icon">category</mat-icon>
       <p>No hay categorías cargadas todavía.</p>
-      <a matButton="filled" routerLink="/admin/categorias/new">
+      <a mat-flat-button routerLink="/admin/categorias/new">
         <mat-icon>add</mat-icon>
-        Crear la primera categoría
+        Nueva categoría
       </a>
     </div>
   } @else {
@@ -43,10 +43,7 @@
           </mat-card-header>
 
           <mat-card-actions align="end">
-            <a
-              matButton="outlined"
-              [routerLink]="['/admin/categorias', cat.id, 'edit']"
-            >
+            <a matButton="outlined" [routerLink]="['/admin/categorias', cat.id, 'edit']">
               <mat-icon>edit</mat-icon>
               Editar
             </a>
@@ -54,14 +51,14 @@
               matButton="outlined"
               (click)="confirmDelete(cat.id, cat.name)"
               [disabled]="deletingIds().has(cat.id)"
-              class="delete-btn"
+              class="panel-destructive-action"
             >
               @if (deletingIds().has(cat.id)) {
                 <mat-spinner diameter="18" />
               } @else {
                 <mat-icon>delete</mat-icon>
               }
-              Borrar
+              Eliminar
             </button>
           </mat-card-actions>
         </mat-card>
@@ -86,17 +83,19 @@
           <td mat-cell *matCellDef="let cat">
             <div class="table-actions">
               <a
-                matIconButton
+                mat-icon-button
                 [routerLink]="['/admin/categorias', cat.id, 'edit']"
                 aria-label="Editar"
+                matTooltip="Editar"
               >
                 <mat-icon>edit</mat-icon>
               </a>
               <button
-                matIconButton
+                mat-icon-button
                 (click)="confirmDelete(cat.id, cat.name)"
                 [disabled]="deletingIds().has(cat.id)"
-                aria-label="Borrar"
+                aria-label="Eliminar"
+                matTooltip="Eliminar"
                 class="delete-btn"
               >
                 @if (deletingIds().has(cat.id)) {

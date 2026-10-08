@@ -94,7 +94,8 @@ export class ProductForm implements OnInit {
           this.applyTypeValidators(product.type);
           this.loading.set(false);
         },
-        error: () => {
+        error: (err) => {
+          this.errorMessage.set(err.error?.message || 'No se pudo cargar el producto.');
           this.loadFailed.set(true);
           this.loading.set(false);
         },
@@ -132,15 +133,15 @@ export class ProductForm implements OnInit {
 
     request$.pipe(finalize(() => this.saving.set(false))).subscribe({
       next: () => {
-        this.snackBar.open(
-          id ? 'Producto actualizado' : 'Producto creado',
-          'Cerrar',
-          { duration: 3000 },
-        );
+        this.snackBar.open(id ? 'Producto actualizado' : 'Producto creado', 'Cerrar', {
+          duration: 3000,
+        });
         this.router.navigate(['/admin/productos']);
       },
-      error: () => {
-        this.errorMessage.set('Error al guardar el producto. Intentá de nuevo.');
+      error: (err) => {
+        const message = err.error?.message || 'Error al guardar el producto. Intentá de nuevo.';
+        this.errorMessage.set(message);
+        this.snackBar.open(message, 'Cerrar', { duration: 5000 });
       },
     });
   }

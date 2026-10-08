@@ -61,7 +61,8 @@ export class BrandForm implements OnInit {
           });
           this.loading.set(false);
         },
-        error: () => {
+        error: (err) => {
+          this.errorMessage.set(err.error?.message || 'No se pudo cargar la marca.');
           this.loadFailed.set(true);
           this.loading.set(false);
         },
@@ -86,15 +87,13 @@ export class BrandForm implements OnInit {
 
     request$.pipe(finalize(() => this.saving.set(false))).subscribe({
       next: () => {
-        this.snackBar.open(
-          id ? 'Marca actualizada' : 'Marca creada',
-          'Cerrar',
-          { duration: 3000 },
-        );
+        this.snackBar.open(id ? 'Marca actualizada' : 'Marca creada', 'Cerrar', { duration: 3000 });
         this.router.navigate(['/admin/marcas']);
       },
-      error: () => {
-        this.errorMessage.set('Error al guardar la marca. Intentá de nuevo.');
+      error: (err) => {
+        const message = err.error?.message || 'Error al guardar la marca. Intentá de nuevo.';
+        this.errorMessage.set(message);
+        this.snackBar.open(message, 'Cerrar', { duration: 5000 });
       },
     });
   }

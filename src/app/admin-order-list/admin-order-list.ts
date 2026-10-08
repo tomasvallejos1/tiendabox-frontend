@@ -1,3 +1,5 @@
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { Component, OnInit, signal } from '@angular/core';
 import { CurrencyPipe, DatePipe, LowerCasePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -45,6 +47,7 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
     MatProgressSpinnerModule,
     MatSelectModule,
     MatTableModule,
+    MatTooltipModule,
     OrderStatusBadge,
   ],
   templateUrl: './admin-order-list.html',
@@ -68,7 +71,10 @@ export class AdminOrderList implements OnInit {
     { value: 'cancelado', label: 'Cancelado' },
   ];
 
-  constructor(private orderService: OrderService) {}
+  constructor(
+    private orderService: OrderService,
+    private snackBar: MatSnackBar,
+  ) {}
 
   ngOnInit(): void {
     this.loadOrders();
@@ -125,10 +131,15 @@ export class AdminOrderList implements OnInit {
         // Actualizar solo esa fila en el dataSource.
         this.orders.update((list) => list.map((o) => (o.id === updated.id ? updated : o)));
         this.removeAdvancing(order.id);
+        this.snackBar.open(`Pedido actualizado: ${STATUS_LABELS[updated.status]}`, 'Cerrar', {
+          duration: 3000,
+        });
       },
-      error: () => {
+      error: (err) => {
         this.removeAdvancing(order.id);
-        this.errorMessage.set('No se pudo actualizar el estado. Intentá de nuevo.');
+        const message = err.error?.message || 'No se pudo actualizar el estado. Intentá de nuevo.';
+        this.errorMessage.set(message);
+        this.snackBar.open(message, 'Cerrar', { duration: 5000 });
       },
     });
   }
@@ -146,10 +157,12 @@ export class AdminOrderList implements OnInit {
         this.orders.set(orders);
         this.loading.set(false);
       },
-      error: () => {
+      error: (err) => {
         this.loading.set(false);
         this.loadFailed.set(true);
-        this.errorMessage.set('No se pudieron cargar los pedidos. Intentá de nuevo más tarde.');
+        this.errorMessage.set(
+          err.error?.message || 'No se pudieron cargar los pedidos. Intentá de nuevo más tarde.',
+        );
       },
     });
   }

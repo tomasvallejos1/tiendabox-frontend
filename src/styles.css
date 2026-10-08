@@ -1,1 +1,86 @@
 /* You can add global styles to this file, and also import other style files */
+
+/* Shared panel controls; scoped to admin routes and their forms. */
+app-admin-layout .panel-section-header {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+app-admin-layout .panel-section-header h1 {
+  font: var(--mat-sys-headline-medium);
+  color: var(--mat-sys-on-surface);
+  margin: 0;
+}
+app-admin-layout .panel-primary-action {
+  width: 100%;
+  min-height: 44px;
+}
+app-admin-layout .panel-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 48px 16px;
+  text-align: center;
+  color: var(--mat-sys-on-surface-variant);
+}
+app-admin-layout .panel-empty-state p {
+  margin: 0;
+}
+app-admin-layout .panel-empty-icon {
+  width: 64px;
+  height: 64px;
+  font-size: 64px;
+  color: var(--mat-sys-outline);
+  opacity: 0.6;
+}
+app-admin-layout .panel-destructive-action {
+  color: var(--mat-sys-error);
+}
+app-admin-layout mat-card-actions,
+app-admin-layout .order-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+app-admin-layout mat-card-actions a,
+app-admin-layout mat-card-actions button,
+app-admin-layout .order-card-actions a,
+app-admin-layout .order-card-actions button {
+  min-height: 44px;
+}
+app-admin-layout .panel-form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+app-admin-layout .panel-form-actions button,
+app-admin-layout .panel-form-actions a {
+  width: 100%;
+  min-height: 44px;
+}
+app-admin-layout mat-card-title,
+app-admin-layout mat-card-subtitle {
+  overflow-wrap: anywhere;
+}
+@media (min-width: 600px) {
+  app-admin-layout .panel-section-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  app-admin-layout .panel-primary-action {
+    width: auto;
+  }
+  app-admin-layout .panel-form-actions {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+  app-admin-layout .panel-form-actions button,
+  app-admin-layout .panel-form-actions a {
+    width: auto;
+  }
+}
