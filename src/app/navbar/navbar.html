@@ -38,16 +38,10 @@
         <!-- Rol owner -->
         <span class="spacer"></span>
 
-        <button matButton="text" [matMenuTriggerFor]="adminMenu">
+        <a matButton="text" routerLink="/admin" routerLinkActive="active-link">
           <mat-icon>admin_panel_settings</mat-icon>
-          Administración
-        </button>
-        <mat-menu #adminMenu="matMenu">
-          <a mat-menu-item routerLink="/admin/productos">Productos</a>
-          <a mat-menu-item routerLink="/admin/categorias">Categorías</a>
-          <a mat-menu-item routerLink="/admin/marcas">Marcas</a>
-          <a mat-menu-item routerLink="/admin/pedidos">Pedidos</a>
-        </mat-menu>
+          Panel
+        </a>
         <button matButton="text" (click)="logout()">Salir</button>
       }
     </div>
@@ -62,17 +56,41 @@
   @if (mobileMenuOpen) {
     <div class="navbar-mobile-menu">
       @if (!authService.isLoggedIn()) {
-        <a matButton="text" routerLink="/productos" routerLinkActive="active-link"
-           (click)="mobileMenuOpen = false">Catálogo</a>
-        <a matButton="tonal" routerLink="/login" routerLinkActive="active-link"
-           (click)="mobileMenuOpen = false">Ingresar</a>
-        <a matButton="filled" routerLink="/registro" routerLinkActive="active-link"
-           (click)="mobileMenuOpen = false">Crear cuenta</a>
+        <a
+          matButton="text"
+          routerLink="/productos"
+          routerLinkActive="active-link"
+          (click)="mobileMenuOpen = false"
+          >Catálogo</a
+        >
+        <a
+          matButton="tonal"
+          routerLink="/login"
+          routerLinkActive="active-link"
+          (click)="mobileMenuOpen = false"
+          >Ingresar</a
+        >
+        <a
+          matButton="filled"
+          routerLink="/registro"
+          routerLinkActive="active-link"
+          (click)="mobileMenuOpen = false"
+          >Crear cuenta</a
+        >
       } @else if (authService.isCliente()) {
-        <a matButton="text" routerLink="/productos" routerLinkActive="active-link"
-           (click)="mobileMenuOpen = false">Catálogo</a>
-        <a matButton="text" routerLink="/carrito" routerLinkActive="active-link"
-           (click)="mobileMenuOpen = false">
+        <a
+          matButton="text"
+          routerLink="/productos"
+          routerLinkActive="active-link"
+          (click)="mobileMenuOpen = false"
+          >Catálogo</a
+        >
+        <a
+          matButton="text"
+          routerLink="/carrito"
+          routerLinkActive="active-link"
+          (click)="mobileMenuOpen = false"
+        >
           <mat-icon
             [matBadge]="cartService.itemCount()"
             matBadgeColor="warn"
@@ -83,20 +101,29 @@
           </mat-icon>
           Carrito
         </a>
-        <a matButton="text" routerLink="/mis-pedidos" routerLinkActive="active-link"
-           (click)="mobileMenuOpen = false">Mis pedidos</a>
-        <a matButton="text" routerLink="/perfil" routerLinkActive="active-link"
-           (click)="mobileMenuOpen = false">Mi perfil</a>
+        <a
+          matButton="text"
+          routerLink="/mis-pedidos"
+          routerLinkActive="active-link"
+          (click)="mobileMenuOpen = false"
+          >Mis pedidos</a
+        >
+        <a
+          matButton="text"
+          routerLink="/perfil"
+          routerLinkActive="active-link"
+          (click)="mobileMenuOpen = false"
+          >Mi perfil</a
+        >
         <button matButton="text" (click)="logout(); mobileMenuOpen = false">Salir</button>
       } @else if (authService.isOwner()) {
-        <a matButton="text" routerLink="/admin/productos" routerLinkActive="active-link"
-           (click)="mobileMenuOpen = false">Productos</a>
-        <a matButton="text" routerLink="/admin/categorias" routerLinkActive="active-link"
-           (click)="mobileMenuOpen = false">Categorías</a>
-        <a matButton="text" routerLink="/admin/marcas" routerLinkActive="active-link"
-           (click)="mobileMenuOpen = false">Marcas</a>
-        <a matButton="text" routerLink="/admin/pedidos" routerLinkActive="active-link"
-           (click)="mobileMenuOpen = false">Pedidos</a>
+        <a
+          matButton="text"
+          routerLink="/admin"
+          routerLinkActive="active-link"
+          (click)="mobileMenuOpen = false"
+          >Panel</a
+        >
         <button matButton="text" (click)="logout(); mobileMenuOpen = false">Salir</button>
       }
     </div>

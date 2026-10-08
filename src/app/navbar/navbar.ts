@@ -3,7 +3,6 @@ import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatMenuModule } from '@angular/material/menu';
 import { MatBadgeModule } from '@angular/material/badge';
 
 import { AuthService } from '../shared/auth-service';
@@ -17,7 +16,6 @@ import { CartService } from '../shared/cart-service';
     MatToolbarModule,
     MatButtonModule,
     MatIconModule,
-    MatMenuModule,
     MatBadgeModule,
   ],
   templateUrl: './navbar.html',

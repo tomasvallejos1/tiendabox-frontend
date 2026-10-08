@@ -1,0 +1,58 @@
+@if (!isDesktop()) {
+  <mat-toolbar class="panel-toolbar">
+    <button
+      matIconButton
+      (click)="menuOpen.set(!menuOpen())"
+      aria-label="Abrir navegación del panel"
+      aria-controls="admin-navigation"
+      [attr.aria-expanded]="menuOpen()"
+    >
+      <mat-icon>menu</mat-icon>
+    </button>
+    <span>Panel de administración</span>
+  </mat-toolbar>
+}
+<mat-sidenav-container class="panel-container">
+  <mat-sidenav
+    #sidenav
+    id="admin-navigation"
+    class="panel-sidenav"
+    [mode]="isDesktop() ? 'side' : 'over'"
+    [opened]="isDesktop() || menuOpen()"
+    (closedStart)="closeMenu()"
+  >
+    <div class="navigation-header">
+      <span>Panel</span>
+      @if (!isDesktop()) {
+        <button matIconButton (click)="closeMenu()" aria-label="Cerrar navegación del panel">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+    </div>
+    <div class="navigation-body">
+      <mat-nav-list aria-label="Secciones del panel">
+        @for (section of sections; track section.path) {
+          <a
+            mat-list-item
+            [routerLink]="section.path"
+            routerLinkActive="active-link"
+            ariaCurrentWhenActive="page"
+            (click)="closeMenu()"
+          >
+            <mat-icon matListItemIcon>{{ section.icon }}</mat-icon>
+            <span matListItemTitle>{{ section.label }}</span>
+          </a>
+        }
+      </mat-nav-list>
+      <mat-nav-list class="store-link" aria-label="Tienda">
+        <a mat-list-item routerLink="/productos" (click)="closeMenu()">
+          <mat-icon matListItemIcon>storefront</mat-icon>
+          <span matListItemTitle>Volver a la tienda</span>
+        </a>
+      </mat-nav-list>
+    </div>
+  </mat-sidenav>
+  <mat-sidenav-content class="panel-content">
+    <router-outlet />
+  </mat-sidenav-content>
+</mat-sidenav-container>
