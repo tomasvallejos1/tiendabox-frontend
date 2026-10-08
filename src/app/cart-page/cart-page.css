@@ -146,6 +146,33 @@
   margin-top: 12px;
 }
 
+/* Formulario de datos faltantes del perfil */
+.profile-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.profile-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+/* Aviso de datos completados */
+.profile-done-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #4caf50;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.profile-done-icon {
+  color: #4caf50;
+}
+
 /* Formulario */
 .checkout-card form {
   display: flex;

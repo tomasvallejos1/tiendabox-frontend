@@ -121,6 +121,102 @@
         </mat-card-content>
       </mat-card>
 
+      <!-- Bloque de datos faltantes del perfil -->
+      @if (customer() && !profileComplete() && !profileSaved()) {
+        <mat-card class="profile-card" appearance="outlined">
+          <mat-card-header>
+            <mat-card-title>Completá tus datos para finalizar la compra</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+              @if (isMissing('name')) {
+                <mat-form-field>
+                  <mat-label>Nombre</mat-label>
+                  <input matInput formControlName="name" />
+                  @if (profileForm.controls.name.hasError('required') || profileForm.controls.name.hasError('pattern')) {
+                    <mat-error>El nombre es obligatorio</mat-error>
+                  }
+                </mat-form-field>
+              }
+
+              @if (isMissing('phone')) {
+                <mat-form-field>
+                  <mat-label>Teléfono</mat-label>
+                  <input matInput formControlName="phone" />
+                  @if (profileForm.controls.phone.hasError('required')) {
+                    <mat-error>El teléfono es obligatorio</mat-error>
+                  }
+                </mat-form-field>
+              }
+
+              @if (isMissing('government_id')) {
+                <mat-form-field>
+                  <mat-label>CUIT / CUIL</mat-label>
+                  <input matInput formControlName="government_id" />
+                  <mat-hint>11 dígitos, sin guiones</mat-hint>
+                  @if (profileForm.controls.government_id.hasError('required')) {
+                    <mat-error>El CUIT/CUIL es obligatorio</mat-error>
+                  } @else if (profileForm.controls.government_id.hasError('pattern')) {
+                    <mat-error>Debe tener exactamente 11 dígitos numéricos</mat-error>
+                  }
+                </mat-form-field>
+              }
+
+              @if (isMissing('tax_status')) {
+                <mat-form-field>
+                  <mat-label>Condición fiscal</mat-label>
+                  <mat-select formControlName="tax_status">
+                    @for (option of taxStatusOptions; track option.value) {
+                      <mat-option [value]="option.value">{{ option.label }}</mat-option>
+                    }
+                  </mat-select>
+                  @if (profileForm.controls.tax_status.hasError('required')) {
+                    <mat-error>La condición fiscal es obligatoria</mat-error>
+                  }
+                </mat-form-field>
+              }
+
+              @if (isMissing('address')) {
+                <mat-form-field>
+                  <mat-label>Dirección</mat-label>
+                  <input matInput formControlName="address" />
+                  @if (profileForm.controls.address.hasError('required')) {
+                    <mat-error>La dirección es obligatoria para envío a domicilio</mat-error>
+                  }
+                </mat-form-field>
+              }
+
+              @if (profileError()) {
+                <p class="error-message">{{ profileError() }}</p>
+              }
+
+              <div class="profile-actions">
+                <button
+                  matButton="filled"
+                  type="submit"
+                  [disabled]="profileSaving()"
+                >
+                  @if (profileSaving()) {
+                    Guardando…
+                  } @else {
+                    Guardar mis datos
+                  }
+                </button>
+              </div>
+            </form>
+          </mat-card-content>
+        </mat-card>
+      }
+
+      @if (profileSaved()) {
+        <mat-card class="profile-done-card" appearance="outlined">
+          <mat-card-content class="profile-done-content">
+            <mat-icon class="profile-done-icon">check_circle</mat-icon>
+            <span>Datos completados correctamente</span>
+          </mat-card-content>
+        </mat-card>
+      }
+
       <!-- Formulario de confirmación -->
       <mat-card class="checkout-card" appearance="outlined">
         <mat-card-header>
