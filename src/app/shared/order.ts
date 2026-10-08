@@ -10,6 +10,15 @@ export interface OrderItem {
   type: string;
 }
 
+export interface OrderCustomer {
+  id: string;
+  name: string;
+  phone: string | null;
+  address: string | null;
+  government_id: string | null;
+  tax_status: string;
+}
+
 export interface Order {
   id: string;
   customer_id: string;
@@ -19,6 +28,7 @@ export interface Order {
   total: number;
   created_at: string;
   items: OrderItem[];
+  customer: OrderCustomer | null; // null si el cliente fue eliminado
 }
 
 // Payload de creación de un pedido.

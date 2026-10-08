@@ -43,6 +43,63 @@
     </mat-card-content>
   </mat-card>
 
+  @if (authService.isOwner()) {
+    <h2 class="section-title">Cliente</h2>
+    <mat-card class="customer-card" appearance="outlined">
+      <mat-card-content class="info-content">
+        @if (order.customer; as customer) {
+          <div class="info-row">
+            <span class="info-label">Nombre</span>
+            <span class="customer-name">{{ customer.name }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Teléfono</span>
+            <span>{{ customer.phone || 'Sin teléfono cargado' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">CUIT</span>
+            <span>{{ customer.government_id || 'Sin CUIT cargado' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Condición fiscal</span>
+            <span>{{ taxStatusLabel(customer.tax_status) }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Dirección</span>
+            <span>{{ customer.address || 'Sin dirección cargada' }}</span>
+          </div>
+        } @else {
+          <p class="customer-deleted">Cliente eliminado</p>
+        }
+
+        <div class="customer-actions">
+          <span
+            class="whatsapp-action"
+            [matTooltip]="
+              whatsAppUrl(order) ? 'Contactar por WhatsApp' : 'El cliente no tiene teléfono cargado'
+            "
+            [attr.tabindex]="whatsAppUrl(order) ? null : 0"
+          >
+            <button
+              matIconButton
+              aria-label="Contactar al cliente por WhatsApp"
+              [disabled]="!whatsAppUrl(order)"
+              (click)="openWhatsApp(order)"
+            >
+              <mat-icon>chat</mat-icon>
+            </button>
+          </span>
+          @if (canCancel) {
+            <button matButton="outlined" [disabled]="cancelling()" (click)="cancelOrder()">
+              <mat-icon>cancel</mat-icon>
+              {{ cancelling() ? 'Cancelando…' : 'Cancelar pedido' }}
+            </button>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+
   <!-- Ítems: cards en mobile -->
   <h2 class="section-title">Productos</h2>
 
@@ -128,9 +185,9 @@
     <p class="error-message action-error">{{ errorMessage() }}</p>
   }
 
-  @if (canCancel) {
+  @if (authService.isCliente() && canCancel) {
     <div class="actions">
-      <button matButton="tonal" color="warn" (click)="cancelOrder()">
+      <button matButton="tonal" [disabled]="cancelling()" (click)="cancelOrder()">
         <mat-icon>cancel</mat-icon>
         Cancelar pedido
       </button>

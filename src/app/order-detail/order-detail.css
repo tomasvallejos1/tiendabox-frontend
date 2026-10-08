@@ -30,8 +30,44 @@
 
 .info-row {
   display: flex;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 4px 12px;
   align-items: baseline;
+  overflow-wrap: anywhere;
+}
+
+.customer-name {
+  font: var(--mat-sys-title-medium);
+  color: var(--mat-sys-on-surface);
+}
+
+.customer-deleted {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.customer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.customer-actions > button {
+  flex: 1 1 auto;
+}
+
+.whatsapp-action {
+  display: inline-flex;
+}
+
+.customer-actions button,
+.actions button {
+  min-height: 48px;
+}
+
+.customer-actions button[matIconButton] {
+  min-width: 48px;
 }
 
 .info-label {
@@ -106,6 +142,10 @@
 }
 
 @media (min-width: 768px) {
+  .customer-actions > button {
+    flex: 0 1 auto;
+  }
+
   .items-cards {
     display: none;
   }
@@ -123,6 +163,8 @@
 .actions {
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-top: 24px;
 }
 

@@ -11,9 +11,40 @@
   margin: 0 0 16px;
 }
 
-.status-filter {
-  width: 220px;
+.filters-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   margin-bottom: 16px;
+}
+
+.status-filter,
+.customer-filter {
+  width: 100%;
+}
+
+.order-customer-info,
+.table-customer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-wrap: anywhere;
+}
+
+.customer-name {
+  font: var(--mat-sys-title-medium);
+  color: var(--mat-sys-on-surface);
+}
+
+.customer-phone,
+.customer-deleted {
+  font-size: 14px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.whatsapp-action {
+  display: inline-flex;
+  align-items: center;
 }
 
 /* Mobile cards: visibles por defecto */
@@ -63,6 +94,26 @@
   align-items: center;
 }
 
+.order-card-actions > a {
+  flex: 1 1 calc(100% - 64px);
+}
+
+.order-card-actions > button {
+  flex: 1 1 100%;
+}
+
+.order-card-actions button,
+.order-card-actions a,
+.table-actions button,
+.table-actions a {
+  min-height: 48px;
+}
+
+.order-card-actions button[matIconButton],
+.table-actions button[matIconButton] {
+  min-width: 48px;
+}
+
 .type-summary {
   display: block;
   font-size: 13px;
@@ -76,17 +127,36 @@
 
 .table-actions {
   display: flex;
+  flex-wrap: wrap;
+  min-width: 220px;
+  padding-block: 8px;
   gap: 8px;
   align-items: center;
 }
 
 @media (min-width: 768px) {
+  .filters-bar {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .status-filter {
+    width: 220px;
+    flex-shrink: 0;
+  }
+
+  .customer-filter {
+    max-width: 360px;
+  }
+
   .orders-cards {
     display: none;
   }
 
   .orders-table {
     display: block;
+    overflow-x: auto;
   }
 
   .orders-table table {
