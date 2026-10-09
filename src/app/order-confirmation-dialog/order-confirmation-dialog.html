@@ -8,22 +8,39 @@
         <span class="info-label">Pedido</span>
         <span class="info-value">#{{ shortId }}</span>
       </div>
-      <div class="info-row">
-        <span class="info-label">Total</span>
-        <span class="info-value">{{ data.total | currency: 'ARS' : 'symbol-narrow' }}</span>
-      </div>
+      @if (data.hasPricedItems) {
+        <div class="info-row">
+          <span class="info-label">Total de productos con precio:</span>
+          <span class="info-value">{{ data.total | currency: 'ARS' : 'symbol-narrow' }}</span>
+        </div>
+      }
+      @if (data.hasEncargoItems) {
+        <div class="info-row">
+          <span class="info-label">Productos a cotizar:</span
+          ><span class="info-value">{{ data.quoteQuantity }}</span>
+        </div>
+      }
     </div>
 
     <p class="whatsapp-message">
-      Pronto nos vamos a estar contactando con vos por WhatsApp para avisarte las novedades de
-      tu pedido.
+      Pronto nos vamos a estar contactando con vos por WhatsApp para avisarte las novedades de tu
+      pedido.
     </p>
 
     @if (data.hasEncargoItems) {
-      <p class="encargo-message">
-        Tu pedido incluye productos por encargo: el precio de esos productos se confirma en ese
-        contacto.
-      </p>
+      <div class="encargo-message" role="note">
+        <strong>Tu pedido incluye productos a cotizar.</strong>
+        <p>
+          Próximamente te vamos a contactar por WhatsApp con la cotización. La compra de esos
+          productos se coordina por ese medio.
+        </p>
+        <p>Enviar este pedido no implica pagar ni comprometerte a comprar esos productos.</p>
+        @if (storeWhatsAppUrl; as url) {
+          <a matButton="outlined" [href]="url" target="_blank" rel="noopener noreferrer"
+            ><mat-icon>chat</mat-icon>Escribir a la tienda</a
+          >
+        }
+      </div>
     }
   </mat-dialog-content>
 

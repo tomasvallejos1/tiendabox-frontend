@@ -37,8 +37,12 @@
       </div>
 
       <div class="info-row">
-        <span class="info-label">Total</span>
-        <span class="order-total">{{ order.total | currency: 'ARS' : 'symbol-narrow' }}</span>
+        @if (summary().onlyEncargoItems) {
+          <span class="order-total">{{ summary().quoteQuantity }} productos a cotizar</span>
+        } @else {
+          <span class="info-label">Total de productos con precio</span>
+          <span class="order-total">{{ summary().total | currency: 'ARS' : 'symbol-narrow' }}</span>
+        }
       </div>
     </mat-card-content>
   </mat-card>
@@ -115,7 +119,7 @@
             <span>Cantidad: {{ item.quantity }}</span>
             <span>
               Precio:
-              @if (item.unit_price !== null) {
+              @if (item.type === 'stock' && hasPrice(item.unit_price)) {
                 {{ item.unit_price | currency: 'ARS' : 'symbol-narrow' }}
               } @else {
                 <span class="price-pending">A confirmar</span>
@@ -123,8 +127,8 @@
             </span>
             <span class="item-subtotal">
               Subtotal:
-              @if (item.unit_price !== null) {
-                {{ item.unit_price * item.quantity | currency: 'ARS' : 'symbol-narrow' }}
+              @if (item.type === 'stock' && hasPrice(subtotal(item.unit_price, item.quantity))) {
+                {{ subtotal(item.unit_price, item.quantity) | currency: 'ARS' : 'symbol-narrow' }}
               } @else {
                 <span class="price-pending">A confirmar</span>
               }
@@ -156,7 +160,7 @@
       <ng-container matColumnDef="unitPrice">
         <th mat-header-cell *matHeaderCellDef>Precio unitario</th>
         <td mat-cell *matCellDef="let item">
-          @if (item.unit_price !== null) {
+          @if (item.type === 'stock' && hasPrice(item.unit_price)) {
             {{ item.unit_price | currency: 'ARS' : 'symbol-narrow' }}
           } @else {
             <span class="price-pending">A confirmar</span>
@@ -167,8 +171,8 @@
       <ng-container matColumnDef="subtotal">
         <th mat-header-cell *matHeaderCellDef>Subtotal</th>
         <td mat-cell *matCellDef="let item">
-          @if (item.unit_price !== null) {
-            {{ item.unit_price * item.quantity | currency: 'ARS' : 'symbol-narrow' }}
+          @if (item.type === 'stock' && hasPrice(subtotal(item.unit_price, item.quantity))) {
+            {{ subtotal(item.unit_price, item.quantity) | currency: 'ARS' : 'symbol-narrow' }}
           } @else {
             <span class="price-pending">A confirmar</span>
           }
@@ -181,6 +185,22 @@
   </div>
 
   <!-- Acciones -->
+  @if (summary().hasEncargoItems) {
+    <div class="quote-notice" role="note">
+      <h2>Productos a cotizar: {{ summary().quoteQuantity }}</h2>
+      <p>
+        El precio final de estos productos se acuerda por WhatsApp. Te vamos a contactar con la
+        cotización y la compra se coordina por ese medio.
+      </p>
+      <p>El pedido no implica pagar ni comprometerte a comprar los productos por encargo.</p>
+      @if (storeWhatsAppUrl(); as url) {
+        <a matButton="outlined" [href]="url" target="_blank" rel="noopener noreferrer"
+          ><mat-icon>chat</mat-icon>Escribir a la tienda</a
+        >
+      }
+    </div>
+  }
+
   @if (errorMessage()) {
     <p class="error-message action-error">{{ errorMessage() }}</p>
   }

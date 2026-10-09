@@ -8,6 +8,7 @@ import { environment } from '../../environments/environment';
 import { Order, OrderStatus } from '../shared/order';
 import { AuthService } from '../shared/auth-service';
 import { OrderDetail } from './order-detail';
+import { buildQuoteWhatsAppUrl } from '../shared/whatsapp';
 
 describe('OrderDetail', () => {
   let fixture: ComponentFixture<OrderDetail>;
@@ -85,6 +86,47 @@ describe('OrderDetail', () => {
       expect(text).toContain(value);
     }
   });
+
+  it.each(['mixto', 'encargo'])(
+    'muestra precios pendientes y contacto con la tienda para %s',
+    async (kind) => {
+      auth.isOwner.mockReturnValue(false);
+      auth.isCliente.mockReturnValue(true);
+      const stock = {
+        id: 'stock',
+        product_id: 'stock',
+        product_name: 'Caja',
+        type: 'stock',
+        unit_price: 1200,
+        quantity: 1,
+      };
+      const encargo = {
+        ...stock,
+        id: 'encargo',
+        product_id: 'encargo',
+        product_name: 'Caja por encargo',
+        type: 'encargo',
+        unit_price: null,
+        quantity: 2,
+      };
+      order.items = kind === 'encargo' ? [encargo] : [stock, encargo];
+      order.total = kind === 'encargo' ? 0 : 1200;
+      await load();
+      const pending = fixture.nativeElement.querySelectorAll('.price-pending');
+      expect(pending).toHaveLength(4);
+      for (const price of pending) expect(price.textContent).toBe('A confirmar');
+      const notice: HTMLElement = fixture.nativeElement.querySelector('.quote-notice');
+      expect(notice.textContent).toContain(
+        'El precio final de estos productos se acuerda por WhatsApp',
+      );
+      expect(notice.querySelector('a')?.href).toBe(buildQuoteWhatsAppUrl(order.id));
+      expect(notice.querySelector('a')?.textContent).toContain('Escribir a la tienda');
+      if (kind === 'encargo') {
+        expect(fixture.nativeElement.textContent).toContain('2 productos a cotizar');
+        expect(fixture.nativeElement.textContent).not.toContain('$0');
+      }
+    },
+  );
 
   it('oculta el bloque Cliente cuando el cliente ve su propio pedido', async () => {
     auth.isOwner.mockReturnValue(false);

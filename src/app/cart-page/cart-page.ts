@@ -1,5 +1,6 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, OnInit, signal } from '@angular/core';
 import { inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CurrencyPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -20,6 +21,7 @@ import { CartService } from '../shared/cart-service';
 import { Customer, TaxStatus } from '../shared/customer';
 import { CustomerService } from '../shared/customer-service';
 import { OrderService } from '../shared/order-service';
+import { hasPrice, summarizeOrderItems } from '../shared/order-summary';
 import { ProductTypeBadge } from '../product-type-badge/product-type-badge';
 import {
   OrderConfirmationData,
@@ -74,6 +76,11 @@ export class CartPage implements OnInit {
   protected readonly loading = signal(true);
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly cart = signal<Cart | null>(null);
+  protected readonly summary = computed(() => summarizeOrderItems(this.cart()?.items ?? []));
+  protected readonly hasEncargoItems = computed(
+    () => this.cart()?.has_encargo_items || this.summary().hasEncargoItems,
+  );
+  protected readonly hasPrice = hasPrice;
   protected readonly removingIds = signal<ReadonlySet<string>>(new Set());
   protected readonly clearing = signal(false);
   protected readonly confirming = signal(false);
@@ -98,24 +105,27 @@ export class CartPage implements OnInit {
     private router: Router,
     private snackBar: MatSnackBar,
     private dialog: MatDialog,
+    private destroyRef: DestroyRef,
   ) {}
 
   ngOnInit(): void {
     this.customerId = this.authService.getCustomerId();
 
     // Suscripción a cambios del delivery_type para validación condicional de la dirección.
-    this.form.controls.delivery_type.valueChanges.subscribe((type) => {
-      const addressControl = this.form.controls.delivery_address;
-      if (type === 'envio') {
-        addressControl.setValidators(Validators.required);
-      } else {
-        addressControl.clearValidators();
-      }
-      addressControl.updateValueAndValidity();
+    this.form.controls.delivery_type.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((type) => {
+        const addressControl = this.form.controls.delivery_address;
+        if (type === 'envio') {
+          addressControl.setValidators([Validators.required, Validators.pattern(/\S/)]);
+        } else {
+          addressControl.clearValidators();
+        }
+        addressControl.updateValueAndValidity();
 
-      // Reevaluar si address es campo faltante del perfil según tipo de entrega.
-      this.evaluateProfileCompleteness();
-    });
+        // Reevaluar si address es campo faltante del perfil según tipo de entrega.
+        this.evaluateProfileCompleteness();
+      });
 
     this.loadCart();
   }
@@ -204,27 +214,35 @@ export class CartPage implements OnInit {
   /** Indica si la confirmación debe bloquearse por problemas en los ítems. */
   protected get confirmBlocked(): boolean {
     const c = this.cart();
-    if (!c) return true;
-    if (c.has_unavailable_items) return true;
-    if (c.items.some((item) => item.exceeds_stock)) return true;
-    if (!this.profileComplete()) return true;
-    return false;
+    if (!c || c.items.length === 0) return true;
+    return c.items.some(
+      (item) =>
+        item.type === 'stock' &&
+        (!item.available ||
+          item.exceeds_stock ||
+          (item.stock_available !== null && item.quantity > item.stock_available)),
+    );
   }
 
   /** Mensaje explicativo de por qué está bloqueado el botón de confirmar. */
   protected get blockReason(): string | null {
     const c = this.cart();
     if (!c) return null;
-    if (c.has_unavailable_items) {
+    if (c.items.some((item) => item.type === 'stock' && !item.available)) {
       return 'Quitá los productos que ya no están disponibles';
     }
-    if (c.items.some((item) => item.exceeds_stock)) {
+    if (c.items.some((item) => this.exceedsStock(item))) {
       return 'Ajustá las cantidades que superan el stock';
     }
-    if (!this.profileComplete()) {
-      return 'Completá tus datos de perfil para poder confirmar';
-    }
     return null;
+  }
+
+  protected exceedsStock(item: CartItem): boolean {
+    return (
+      item.type === 'stock' &&
+      (item.exceeds_stock ||
+        (item.stock_available !== null && item.quantity > item.stock_available))
+    );
   }
 
   /** Guarda los datos faltantes del perfil. */
@@ -312,6 +330,7 @@ export class CartPage implements OnInit {
   }
 
   protected confirmOrder(): void {
+    if (this.confirming() || this.clearing() || this.confirmBlocked) return;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -328,17 +347,18 @@ export class CartPage implements OnInit {
       payload.delivery_address = value.delivery_address;
     }
 
-    const cart = this.cart();
-
     this.orderService.createOrder(payload).subscribe({
       next: (order) => {
         this.confirming.set(false);
         this.cartService.setCart(null);
 
+        const summary = summarizeOrderItems(order.items);
         const data: OrderConfirmationData = {
           orderId: order.id,
-          total: order.total,
-          hasEncargoItems: cart?.has_encargo_items ?? false,
+          total: summary.total,
+          hasEncargoItems: summary.hasEncargoItems,
+          quoteQuantity: summary.quoteQuantity,
+          hasPricedItems: summary.hasPricedItems,
         };
 
         this.dialog.open(OrderConfirmationDialog, {
@@ -351,7 +371,9 @@ export class CartPage implements OnInit {
       error: (err) => {
         this.confirming.set(false);
         const msg =
-          err?.error?.message || 'No se pudo crear el pedido. Intentá de nuevo más tarde.';
+          err?.error?.message ||
+          err?.error?.error ||
+          'No se pudo crear el pedido. Intentá de nuevo más tarde.';
         this.errorMessage.set(msg);
       },
     });

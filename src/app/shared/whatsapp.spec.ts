@@ -1,8 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildWhatsAppUrl } from './whatsapp';
+import { environment } from '../../environments/environment';
+import { buildQuoteWhatsAppUrl, buildWhatsAppUrl } from './whatsapp';
 
 describe('buildWhatsAppUrl', () => {
+  it('arma el contacto de cotización con el número de la tienda y el pedido abreviado', () => {
+    const message =
+      'Hola, acabo de hacer el pedido #abcd1234 y quiero consultar por los productos a cotizar.';
+    const url = buildQuoteWhatsAppUrl('abcd1234-5678');
+    expect(url).toBe(buildWhatsAppUrl(environment.storeWhatsapp, message));
+    expect(new URL(url!).searchParams.get('text')).toBe(message);
+  });
   it.each([null, '', 'sin teléfono', ' + () - '])('ignora teléfonos sin dígitos: %s', (phone) => {
     expect(buildWhatsAppUrl(phone)).toBeNull();
   });

@@ -1,3 +1,5 @@
+import { environment } from '../../environments/environment';
+
 /**
  * Heurística para armar URLs de WhatsApp con números argentinos.
  * Asume que el teléfono incluye el código de área (sin el 15 local).
@@ -26,4 +28,9 @@ export function buildWhatsAppUrl(phone: string | null, message?: string): string
     url += `?text=${encodeURIComponent(message)}`;
   }
   return url;
+}
+
+export function buildQuoteWhatsAppUrl(orderId: string): string | null {
+  const message = `Hola, acabo de hacer el pedido #${orderId.substring(0, 8)} y quiero consultar por los productos a cotizar.`;
+  return buildWhatsAppUrl(environment.storeWhatsapp, message);
 }

@@ -10,7 +10,7 @@
   font-size: 64px;
   width: 64px;
   height: 64px;
-  color: #4caf50;
+  color: var(--mat-sys-primary);
   margin-bottom: 8px;
 }
 
@@ -21,6 +21,7 @@ h2[mat-dialog-title] {
 }
 
 .order-info {
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -35,6 +36,8 @@ h2[mat-dialog-title] {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 12px;
 }
 
 .info-label {
@@ -62,4 +65,26 @@ h2[mat-dialog-title] {
   background: var(--mat-sys-tertiary-container);
   color: var(--mat-sys-on-tertiary-container);
   margin: 0 0 8px;
+}
+
+.encargo-message p {
+  margin: 8px 0 12px;
+}
+
+.encargo-message a,
+mat-dialog-actions a {
+  width: 100%;
+  min-height: 48px;
+}
+
+mat-dialog-actions {
+  width: 100%;
+  box-sizing: border-box;
+  gap: 8px;
+}
+
+@media (min-width: 600px) {
+  mat-dialog-actions a {
+    width: auto;
+  }
 }

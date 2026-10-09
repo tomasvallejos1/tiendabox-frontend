@@ -119,6 +119,8 @@
   padding: 12px 0;
   border-bottom: 1px solid var(--mat-sys-outline-variant);
   margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .total-amount {
@@ -126,11 +128,9 @@
   color: var(--mat-sys-primary);
 }
 
-.encargo-note {
-  font-size: 13px;
-  color: var(--mat-sys-on-surface-variant);
-  margin: 8px 0;
-  line-height: 1.4;
+.quote-count {
+  font: var(--mat-sys-title-large);
+  color: var(--mat-sys-primary);
 }
 
 .block-reason {
@@ -192,7 +192,7 @@
   margin: 0;
 }
 
-/* Aviso de productos por encargo, justo antes del botón de confirmar */
+/* Aviso visible antes del resumen del pedido. */
 .encargo-notice {
   display: flex;
   align-items: flex-start;
@@ -210,7 +210,20 @@
 }
 
 .encargo-notice p {
-  margin: 0;
+  margin: 8px 0 0;
+}
+
+.encargo-notice > div {
+  min-width: 0;
+}
+
+.checkout-actions button {
+  width: 100%;
+  min-height: 48px;
+}
+
+.checkout-card mat-form-field {
+  width: 100%;
 }
 
 .checkout-actions {

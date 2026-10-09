@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, computed, OnInit, signal } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
@@ -11,7 +11,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 
 import { Order } from '../shared/order';
-import { buildWhatsAppUrl } from '../shared/whatsapp';
+import { buildQuoteWhatsAppUrl, buildWhatsAppUrl } from '../shared/whatsapp';
+import { hasPrice, summarizeOrderItems } from '../shared/order-summary';
 import { ConfirmDialog, ConfirmDialogData } from '../confirm-dialog/confirm-dialog';
 import { OrderService } from '../shared/order-service';
 import { AuthService } from '../shared/auth-service';
@@ -41,6 +42,18 @@ export class OrderDetail implements OnInit {
   protected readonly loadFailed = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly order = signal<Order | null>(null);
+  protected readonly summary = computed(() => summarizeOrderItems(this.order()?.items ?? []));
+  protected readonly hasPrice = hasPrice;
+  protected readonly storeWhatsAppUrl = computed(() => {
+    const order = this.order();
+    return order ? buildQuoteWhatsAppUrl(order.id) : null;
+  });
+
+  protected subtotal(unitPrice: number | null, quantity: number): number | null {
+    if (!hasPrice(unitPrice) || !Number.isInteger(quantity) || quantity <= 0) return null;
+    const subtotal = unitPrice * quantity;
+    return hasPrice(subtotal) ? subtotal : null;
+  }
   protected readonly cancelling = signal(false);
 
   protected readonly displayedColumns = ['product', 'quantity', 'unitPrice', 'subtotal'];

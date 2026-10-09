@@ -3,11 +3,13 @@ import { CurrencyPipe, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 
 import { Order } from '../shared/order';
+import { summarizeOrderItems } from '../shared/order-summary';
 import { OrderService } from '../shared/order-service';
 import { OrderStatusBadge } from '../order-status-badge/order-status-badge';
 
@@ -19,6 +21,7 @@ import { OrderStatusBadge } from '../order-status-badge/order-status-badge';
     RouterLink,
     MatButtonModule,
     MatCardModule,
+    MatChipsModule,
     MatIconModule,
     MatProgressSpinnerModule,
     MatTableModule,
@@ -35,6 +38,10 @@ export class OrderList implements OnInit {
   protected readonly displayedColumns = ['id', 'date', 'status', 'items', 'total', 'actions'];
 
   constructor(private orderService: OrderService) {}
+
+  protected summary(order: Order) {
+    return summarizeOrderItems(order.items);
+  }
 
   ngOnInit(): void {
     this.loadOrders();

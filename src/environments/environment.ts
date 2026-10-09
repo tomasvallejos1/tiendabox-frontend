@@ -4,4 +4,6 @@
 export const environment = {
   production: false,
   apiUrl: 'http://localhost:3000/api',
+  // Número de ejemplo: reemplazar por el WhatsApp real de la tienda, con código de área.
+  storeWhatsapp: '5491155551234',
 };

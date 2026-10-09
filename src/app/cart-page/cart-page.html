@@ -26,7 +26,7 @@
         <mat-card
           class="item-card"
           appearance="outlined"
-          [class.unavailable]="!item.available"
+          [class.unavailable]="item.type === 'stock' && !item.available"
         >
           <mat-card-content class="item-content">
             <div class="item-info">
@@ -41,11 +41,11 @@
                 <app-product-type-badge [type]="item.type" />
               </div>
 
-              @if (!item.available) {
+              @if (item.type === 'stock' && !item.available) {
                 <span class="item-warning unavailable-warning">Ya no está disponible</span>
               }
 
-              @if (item.exceeds_stock) {
+              @if (exceedsStock(item)) {
                 <span class="item-warning stock-warning">
                   Solo quedan {{ item.stock_available }} unidades
                 </span>
@@ -54,16 +54,19 @@
               <div class="item-details">
                 <span class="item-qty">Cant: {{ item.quantity }}</span>
 
-                @if (item.type === 'encargo') {
-                  <span class="item-price">Precio: a confirmar</span>
-                  <span class="item-subtotal">—</span>
-                } @else {
+                @if (item.type === 'stock' && hasPrice(item.unit_price)) {
                   <span class="item-price">
                     {{ item.unit_price | currency: 'ARS' : 'symbol-narrow' }} c/u
                   </span>
+                } @else {
+                  <span class="item-price">Precio: A confirmar</span>
+                }
+                @if (item.type === 'stock' && hasPrice(item.subtotal)) {
                   <span class="item-subtotal">
                     {{ item.subtotal | currency: 'ARS' : 'symbol-narrow' }}
                   </span>
+                } @else {
+                  <span class="item-subtotal">Subtotal: A confirmar</span>
                 }
               </div>
             </div>
@@ -71,7 +74,7 @@
             <button
               matIconButton
               (click)="removeItem(item)"
-              [disabled]="removingIds().has(item.product_id)"
+              [disabled]="confirming() || removingIds().has(item.product_id)"
               aria-label="Eliminar producto del carrito"
             >
               <mat-icon>delete</mat-icon>
@@ -83,23 +86,37 @@
 
     <!-- Resumen y formulario -->
     <section class="summary-section">
+      @if (hasEncargoItems()) {
+        <div class="encargo-notice" role="note">
+          <mat-icon>info</mat-icon>
+          <div>
+            <strong>Tu pedido incluye productos a cotizar.</strong>
+            <p>
+              El total corresponde solo a los productos con precio. Por los demás te vamos a
+              contactar por WhatsApp con la cotización y coordinar la compra por ese medio.
+            </p>
+            <p>
+              Enviar el pedido no implica pagar ni comprometerte a comprar los productos por
+              encargo.
+            </p>
+          </div>
+        </div>
+      }
       <mat-card class="summary-card" appearance="outlined">
         <mat-card-header>
           <mat-card-title>Resumen del pedido</mat-card-title>
         </mat-card-header>
         <mat-card-content>
           <div class="summary-total">
-            <span>Total</span>
-            <span class="total-amount">
-              {{ cart()!.total | currency: 'ARS' : 'symbol-narrow' }}
-            </span>
+            @if (summary().onlyEncargoItems) {
+              <span class="quote-count">{{ summary().quoteQuantity }} productos a cotizar</span>
+            } @else {
+              <span>Total de productos con precio</span>
+              <span class="total-amount">
+                {{ summary().total | currency: 'ARS' : 'symbol-narrow' }}
+              </span>
+            }
           </div>
-
-          @if (cart()!.has_encargo_items) {
-            <p class="encargo-note">
-              Incluye productos por encargo cuyo precio se confirma al procesar el pedido.
-            </p>
-          }
 
           @if (blockReason) {
             <p class="block-reason">{{ blockReason }}</p>
@@ -109,7 +126,7 @@
             <button
               matButton="outlined"
               (click)="clearCart()"
-              [disabled]="clearing()"
+              [disabled]="clearing() || confirming()"
             >
               @if (clearing()) {
                 Vaciando…
@@ -125,15 +142,19 @@
       @if (customer() && !profileComplete() && !profileSaved()) {
         <mat-card class="profile-card" appearance="outlined">
           <mat-card-header>
-            <mat-card-title>Completá tus datos para finalizar la compra</mat-card-title>
+            <mat-card-title>Datos de contacto y perfil</mat-card-title>
           </mat-card-header>
           <mat-card-content>
+            <p>Podés completar estos datos para que podamos contactarte y coordinar tu pedido.</p>
             <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
               @if (isMissing('name')) {
                 <mat-form-field>
                   <mat-label>Nombre</mat-label>
                   <input matInput formControlName="name" />
-                  @if (profileForm.controls.name.hasError('required') || profileForm.controls.name.hasError('pattern')) {
+                  @if (
+                    profileForm.controls.name.hasError('required') ||
+                    profileForm.controls.name.hasError('pattern')
+                  ) {
                     <mat-error>El nombre es obligatorio</mat-error>
                   }
                 </mat-form-field>
@@ -191,11 +212,7 @@
               }
 
               <div class="profile-actions">
-                <button
-                  matButton="filled"
-                  type="submit"
-                  [disabled]="profileSaving()"
-                >
+                <button matButton="filled" type="submit" [disabled]="profileSaving()">
                   @if (profileSaving()) {
                     Guardando…
                   } @else {
@@ -228,7 +245,10 @@
               <mat-radio-button value="retiro">Retiro en el local</mat-radio-button>
               <mat-radio-button value="envio">Envío a domicilio</mat-radio-button>
             </mat-radio-group>
-            @if (form.controls.delivery_type.touched && form.controls.delivery_type.hasError('required')) {
+            @if (
+              form.controls.delivery_type.touched &&
+              form.controls.delivery_type.hasError('required')
+            ) {
               <p class="field-error">Seleccioná un tipo de entrega</p>
             }
 
@@ -236,7 +256,9 @@
               <mat-form-field>
                 <mat-label>Dirección de envío</mat-label>
                 <input matInput formControlName="delivery_address" />
-                @if (form.controls.delivery_address.touched && form.controls.delivery_address.hasError('required')) {
+                @if (
+                  form.controls.delivery_address.touched && form.controls.delivery_address.invalid
+                ) {
                   <mat-error>La dirección es obligatoria para envío a domicilio</mat-error>
                 }
               </mat-form-field>
@@ -246,27 +268,16 @@
               <p class="error-message">{{ errorMessage() }}</p>
             }
 
-            @if (cart()!.has_encargo_items) {
-              <div class="encargo-notice" role="note">
-                <mat-icon>info</mat-icon>
-                <p>
-                  <strong>Tu pedido incluye productos por encargo.</strong>
-                  Su precio todavía no está cerrado: te lo confirmamos después de recibir el
-                  pedido, y el total de arriba no los incluye.
-                </p>
-              </div>
-            }
-
             <div class="checkout-actions">
               <button
                 matButton="filled"
                 type="submit"
-                [disabled]="confirming() || confirmBlocked"
+                [disabled]="confirming() || clearing() || confirmBlocked"
               >
                 @if (confirming()) {
                   Confirmando…
-                } @else if (cart()!.has_encargo_items) {
-                  Confirmar pedido (precio a confirmar)
+                } @else if (summary().onlyEncargoItems) {
+                  Enviar pedido de cotización
                 } @else {
                   Confirmar pedido
                 }

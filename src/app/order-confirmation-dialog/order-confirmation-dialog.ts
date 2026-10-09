@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Inject } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
@@ -6,12 +6,14 @@ import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { inject } from '@angular/core';
+import { buildQuoteWhatsAppUrl } from '../shared/whatsapp';
 
 export interface OrderConfirmationData {
   orderId: string;
   total: number;
   hasEncargoItems: boolean;
+  quoteQuantity: number;
+  hasPricedItems: boolean;
 }
 
 @Component({
@@ -21,9 +23,14 @@ export interface OrderConfirmationData {
   styleUrl: './order-confirmation-dialog.css',
 })
 export class OrderConfirmationDialog {
-  protected readonly data: OrderConfirmationData = inject(MAT_DIALOG_DATA);
+  constructor(
+    private dialogRef: MatDialogRef<OrderConfirmationDialog>,
+    @Inject(MAT_DIALOG_DATA) protected readonly data: OrderConfirmationData,
+  ) {}
 
-  constructor(private dialogRef: MatDialogRef<OrderConfirmationDialog>) {}
+  protected get storeWhatsAppUrl(): string | null {
+    return buildQuoteWhatsAppUrl(this.data.orderId);
+  }
 
   protected get shortId(): string {
     return this.data.orderId.substring(0, 8).toUpperCase();
