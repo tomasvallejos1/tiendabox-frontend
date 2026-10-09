@@ -3,10 +3,8 @@
   <p>{{ data.message }}</p>
 </mat-dialog-content>
 <mat-dialog-actions align="end">
-  <button matButton="outlined" (click)="cancel()">
-    {{ data.cancelLabel || 'Cancelar' }}
-  </button>
-  <button matButton="filled" color="warn" (click)="confirm()">
-    {{ data.confirmLabel || 'Confirmar' }}
+  <button mat-button (click)="cancel()">{{ data.cancelLabel || 'Cancelar' }}</button>
+  <button mat-flat-button [class.destructive]="data.isDestructive" (click)="confirm()">
+    {{ data.confirmLabel || data.confirmText || 'Confirmar' }}
   </button>
 </mat-dialog-actions>

@@ -7,7 +7,7 @@
   } @else if (loadFailed()) {
     <div class="state-container error-panel" role="alert">
       <mat-icon class="state-icon error-icon">error_outline</mat-icon>
-      <p>No se pudo cargar la categoría.</p>
+      <p>{{ errorMessage() || 'No se pudo cargar la categoría.' }}</p>
       <a matButton="filled" routerLink="/admin/categorias">
         <mat-icon>arrow_back</mat-icon>
         Volver al listado
@@ -41,14 +41,14 @@
         <textarea matInput formControlName="description" rows="3"></textarea>
       </mat-form-field>
 
-      <div class="form-actions">
-        <a matButton="outlined" routerLink="/admin/categorias">Cancelar</a>
-        <button matButton="filled" type="submit" [disabled]="saving()">
+      <div class="panel-form-actions">
+        <button mat-flat-button type="submit" [disabled]="saving()">
           @if (saving()) {
             <mat-spinner diameter="18" />
           }
-          {{ isEditing() ? 'Guardar cambios' : 'Crear categoría' }}
+          Guardar
         </button>
+        <a mat-button routerLink="/admin/categorias">Cancelar</a>
       </div>
     </form>
   }

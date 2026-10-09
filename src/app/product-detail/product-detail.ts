@@ -1,3 +1,4 @@
+import { ProductImage } from '../product-image/product-image';
 import { Component, OnInit, signal } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -20,6 +21,7 @@ import { CartService } from '../shared/cart-service';
 @Component({
   selector: 'app-product-detail',
   imports: [
+    ProductImage,
     CurrencyPipe,
     RouterLink,
     FormsModule,

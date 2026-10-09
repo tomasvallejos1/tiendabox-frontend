@@ -151,3 +151,11 @@
 .state-icon.error {
   color: var(--mat-sys-error);
 }
+
+.detail-card {
+  min-width: 0;
+  overflow: hidden;
+}
+mat-card-title {
+  overflow-wrap: anywhere;
+}

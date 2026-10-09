@@ -5,10 +5,14 @@ p {
   color: var(--mat-sys-on-surface-variant);
 }
 
+.destructive {
+  --mat-button-filled-container-color: var(--mat-sys-error);
+  --mat-button-filled-label-text-color: var(--mat-sys-on-error);
+}
 mat-dialog-actions {
   gap: 8px;
+  flex-wrap: wrap;
 }
-
 mat-dialog-actions button {
-  min-height: 48px;
+  min-height: 44px;
 }

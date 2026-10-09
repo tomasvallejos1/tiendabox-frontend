@@ -1,0 +1,94 @@
+<section class="customer-form-container">
+  <h1>{{ isEditing() ? 'Editar cliente' : 'Nuevo cliente' }}</h1>
+  @if (loading()) {
+    <div class="state" role="status">
+      <mat-spinner diameter="48" />
+      <p>Cargando cliente…</p>
+    </div>
+  } @else if (loadFailed()) {
+    <div class="state" role="alert">
+      <p>{{ errorMessage() }}</p>
+      <button mat-flat-button (click)="loadCustomer()">Reintentar</button>
+      <a mat-button routerLink="/admin/clientes">Volver al listado</a>
+    </div>
+  } @else {
+    @if (errorMessage()) {
+      <p class="error-banner" role="alert">{{ errorMessage() }}</p>
+    }
+    @if (isEditing() && isLocalCustomer()) {
+      <p class="info-banner">Es un cliente de local, sin cuenta web para entrar a la tienda.</p>
+    }
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <mat-form-field
+        ><mat-label>Nombre</mat-label>
+        <input matInput formControlName="name" autocomplete="name" />
+        @if (form.controls.name.invalid) {
+          <mat-error>El nombre es obligatorio.</mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field
+        ><mat-label>CUIT</mat-label>
+        <input matInput formControlName="government_id" inputmode="numeric" maxlength="11" />
+        @if (form.controls.government_id.hasError('pattern')) {
+          <mat-error>El CUIT debe tener 11 dígitos.</mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field
+        ><mat-label>Condición fiscal</mat-label>
+        <mat-select formControlName="tax_status">
+          @for (option of taxStatusOptions; track option.value) {
+            <mat-option [value]="option.value">{{ option.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field
+        ><mat-label>Teléfono</mat-label>
+        <input matInput type="tel" formControlName="phone" autocomplete="tel" />
+      </mat-form-field>
+      <mat-form-field
+        ><mat-label>Dirección</mat-label>
+        <textarea
+          matInput
+          formControlName="address"
+          rows="2"
+          autocomplete="street-address"
+        ></textarea>
+      </mat-form-field>
+      @if (!isEditing()) {
+        <mat-checkbox formControlName="web_access">Darle acceso a la tienda web</mat-checkbox>
+        @if (form.controls.web_access.value) {
+          <mat-form-field
+            ><mat-label>Email</mat-label>
+            <input matInput type="email" formControlName="email" autocomplete="email" />
+            @if (form.controls.email.hasError('required')) {
+              <mat-error>El email es obligatorio para darle acceso web.</mat-error>
+            } @else if (form.controls.email.hasError('email')) {
+              <mat-error>Ingresá un email válido.</mat-error>
+            }
+          </mat-form-field>
+          <mat-form-field
+            ><mat-label>Contraseña (opcional)</mat-label>
+            <input
+              matInput
+              type="password"
+              formControlName="password"
+              autocomplete="new-password"
+            />
+            <mat-hint>Si lo dejás vacío se genera una automáticamente</mat-hint>
+          </mat-form-field>
+        } @else {
+          <p class="info-banner">
+            El cliente va a quedar registrado para pedidos en el local, sin usuario para entrar a la
+            tienda.
+          </p>
+        }
+      }
+      <div class="panel-form-actions">
+        <button mat-flat-button type="submit" [disabled]="saving()">
+          {{ saving() ? 'Guardando…' : 'Guardar' }}
+        </button>
+        <a mat-button routerLink="/admin/clientes">Cancelar</a>
+      </div>
+    </form>
+  }
+</section>

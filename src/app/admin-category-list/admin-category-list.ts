@@ -1,3 +1,6 @@
+import { MatDialog } from '@angular/material/dialog';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { ConfirmDialog } from '../confirm-dialog/confirm-dialog';
 import { Component, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
@@ -21,6 +24,7 @@ import { CategoryService } from '../shared/category-service';
     MatProgressSpinnerModule,
     MatSnackBarModule,
     MatTableModule,
+    MatTooltipModule,
   ],
   templateUrl: './admin-category-list.html',
   styleUrl: './admin-category-list.css',
@@ -36,6 +40,7 @@ export class AdminCategoryList implements OnInit {
   constructor(
     private categoryService: CategoryService,
     private snackBar: MatSnackBar,
+    private dialog: MatDialog,
   ) {}
 
   ngOnInit(): void {
@@ -46,15 +51,29 @@ export class AdminCategoryList implements OnInit {
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: (cats) => this.dataSource.set(cats),
-        error: () => this.errorMessage.set('Error al cargar las categorías.'),
+        error: (err) =>
+          this.errorMessage.set(err.error?.message || 'Error al cargar las categorías.'),
       });
   }
 
   confirmDelete(id: string, name: string): void {
-    if (!window.confirm(`¿Eliminar la categoría "${name}"?`)) {
-      return;
-    }
+    this.dialog
+      .open(ConfirmDialog, {
+        width: '400px',
+        data: {
+          title: 'Eliminar categoría',
+          message: `¿Eliminar la categoría "${name}"?`,
+          confirmText: 'Eliminar',
+          isDestructive: true,
+        },
+      })
+      .afterClosed()
+      .subscribe((confirmed) => {
+        if (confirmed) this.deleteConfirmed(id);
+      });
+  }
 
+  private deleteConfirmed(id: string): void {
     this.deletingIds.update((ids) => {
       const next = new Set(ids);
       next.add(id);
@@ -75,10 +94,10 @@ export class AdminCategoryList implements OnInit {
       .subscribe({
         next: () => {
           this.dataSource.update((items) => items.filter((i) => i.id !== id));
+          this.snackBar.open('Categoría eliminada', 'Cerrar', { duration: 3000 });
         },
         error: (err) => {
-          const message =
-            err.error?.message ?? 'No se pudo eliminar la categoría.';
+          const message = err.error?.message ?? 'No se pudo eliminar la categoría.';
           this.snackBar.open(message, 'Cerrar', { duration: 5000 });
         },
       });

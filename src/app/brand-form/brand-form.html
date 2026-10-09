@@ -7,7 +7,7 @@
   } @else if (loadFailed()) {
     <div class="state-container error-panel" role="alert">
       <mat-icon class="state-icon error-icon">error_outline</mat-icon>
-      <p>No se pudo cargar la marca.</p>
+      <p>{{ errorMessage() || 'No se pudo cargar la marca.' }}</p>
       <a matButton="filled" routerLink="/admin/marcas">
         <mat-icon>arrow_back</mat-icon>
         Volver al listado
@@ -41,14 +41,14 @@
         <input matInput formControlName="logo_url" />
       </mat-form-field>
 
-      <div class="form-actions">
-        <a matButton="outlined" routerLink="/admin/marcas">Cancelar</a>
-        <button matButton="filled" type="submit" [disabled]="saving()">
+      <div class="panel-form-actions">
+        <button mat-flat-button type="submit" [disabled]="saving()">
           @if (saving()) {
             <mat-spinner diameter="18" />
           }
-          {{ isEditing() ? 'Guardar cambios' : 'Crear marca' }}
+          Guardar
         </button>
+        <a mat-button routerLink="/admin/marcas">Cancelar</a>
       </div>
     </form>
   }

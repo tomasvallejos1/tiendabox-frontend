@@ -1,3 +1,8 @@
+import { ProductImage } from '../product-image/product-image';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { ConfirmDialog } from '../confirm-dialog/confirm-dialog';
 import { Component, OnInit, signal } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -16,6 +21,7 @@ import { BrandService } from '../shared/brand-service';
 @Component({
   selector: 'app-admin-product-list',
   imports: [
+    ProductImage,
     CurrencyPipe,
     RouterLink,
     MatButtonModule,
@@ -23,6 +29,7 @@ import { BrandService } from '../shared/brand-service';
     MatIconModule,
     MatProgressSpinnerModule,
     MatTableModule,
+    MatTooltipModule,
   ],
   templateUrl: './admin-product-list.html',
   styleUrl: './admin-product-list.css',
@@ -34,6 +41,7 @@ export class AdminProductList implements OnInit {
   protected readonly deletingIds = signal<ReadonlySet<string>>(new Set());
 
   protected readonly displayedColumns = [
+    'image',
     'name',
     'type',
     'price',
@@ -47,10 +55,13 @@ export class AdminProductList implements OnInit {
     private productService: ProductService,
     private categoryService: CategoryService,
     private brandService: BrandService,
+    private snackBar: MatSnackBar,
+    private dialog: MatDialog,
   ) {}
 
   ngOnInit(): void {
     this.loading.set(true);
+    this.errorMessage.set('');
     forkJoin([
       this.productService.getProducts(),
       this.categoryService.getCategories(),
@@ -60,8 +71,8 @@ export class AdminProductList implements OnInit {
         this.dataSource.set(products);
         this.loading.set(false);
       },
-      error: () => {
-        this.errorMessage.set('Error al cargar los productos.');
+      error: (err) => {
+        this.errorMessage.set(err.error?.message || 'Error al cargar los productos.');
         this.loading.set(false);
       },
     });
@@ -80,10 +91,23 @@ export class AdminProductList implements OnInit {
   }
 
   confirmDelete(id: string, name: string): void {
-    if (!window.confirm(`¿Eliminar el producto "${name}"?`)) {
-      return;
-    }
+    this.dialog
+      .open(ConfirmDialog, {
+        width: '400px',
+        data: {
+          title: 'Eliminar producto',
+          message: `¿Eliminar el producto "${name}"?`,
+          confirmText: 'Eliminar',
+          isDestructive: true,
+        },
+      })
+      .afterClosed()
+      .subscribe((confirmed) => {
+        if (confirmed) this.deleteConfirmed(id);
+      });
+  }
 
+  private deleteConfirmed(id: string): void {
     this.deletingIds.update((ids) => {
       const next = new Set(ids);
       next.add(id);
@@ -104,9 +128,14 @@ export class AdminProductList implements OnInit {
       .subscribe({
         next: () => {
           this.dataSource.update((items) => items.filter((i) => i.id !== id));
+          this.snackBar.open('Producto eliminado', 'Cerrar', { duration: 3000 });
         },
-        error: () => {
-          window.alert('No se pudo eliminar el producto. Intentá de nuevo.');
+        error: (err) => {
+          this.snackBar.open(
+            err.error?.message || 'No se pudo eliminar el producto. Intentá de nuevo.',
+            'Cerrar',
+            { duration: 5000 },
+          );
         },
       });
   }

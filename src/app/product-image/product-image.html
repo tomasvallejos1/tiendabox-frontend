@@ -1,0 +1,9 @@
+<div class="image-container">
+  @if (url() && !failed()) {
+    <img [src]="url()" [alt]="name()" loading="lazy" (error)="onError()" />
+  } @else {
+    <div class="placeholder" role="img" [attr.aria-label]="name()">
+      <mat-icon aria-hidden="true">image</mat-icon>
+    </div>
+  }
+</div>

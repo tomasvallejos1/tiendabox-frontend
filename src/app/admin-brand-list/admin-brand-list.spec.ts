@@ -1,9 +1,64 @@
-import { describe, it, expect } from 'vitest';
-
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { of } from 'rxjs';
 import { AdminBrandList } from './admin-brand-list';
+import { ConfirmDialog } from '../confirm-dialog/confirm-dialog';
+import { environment } from '../../environments/environment';
 
 describe('AdminBrandList', () => {
-  it('should be a class', () => {
-    expect(AdminBrandList).toBeDefined();
+  let http: HttpTestingController;
+  const dialog = { open: vi.fn(() => ({ afterClosed: () => of(false) })) };
+  const snackBar = { open: vi.fn() };
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    await TestBed.configureTestingModule({
+      imports: [AdminBrandList],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: MatDialog, useValue: dialog },
+        { provide: MatSnackBar, useValue: snackBar },
+      ],
+    }).compileComponents();
+    http = TestBed.inject(HttpTestingController);
+  });
+  afterEach(() => http.verify());
+
+  it('deletes only after confirming, preserves backend errors and reports success', async () => {
+    const fixture = TestBed.createComponent(AdminBrandList);
+    vi.spyOn(fixture.debugElement.injector.get(MatSnackBar), 'open').mockImplementation(
+      snackBar.open,
+    );
+    await fixture.whenStable();
+    http.match(() => true).forEach((request) => request.flush([]));
+    fixture.componentInstance.confirmDelete('test-id', 'Prueba');
+    expect(dialog.open).toHaveBeenCalledWith(
+      ConfirmDialog,
+      expect.objectContaining({
+        data: expect.objectContaining({ confirmText: 'Eliminar', isDestructive: true }),
+      }),
+    );
+    http.expectNone(environment.apiUrl + '/brand/test-id');
+    dialog.open.mockReturnValue({ afterClosed: () => of(true) });
+    fixture.componentInstance.confirmDelete('test-id', 'Prueba');
+    const request = http.expectOne(environment.apiUrl + '/brand/test-id');
+    expect(request.request.method).toBe('DELETE');
+    request.flush(
+      { message: 'No se puede eliminar: está en uso' },
+      { status: 409, statusText: 'Conflict' },
+    );
+    expect(snackBar.open).toHaveBeenLastCalledWith('No se puede eliminar: está en uso', 'Cerrar', {
+      duration: 5000,
+    });
+    fixture.componentInstance.confirmDelete('test-id', 'Prueba');
+    http.expectOne(environment.apiUrl + '/brand/test-id').flush(null);
+    expect(snackBar.open).toHaveBeenLastCalledWith('Marca eliminada', 'Cerrar', { duration: 3000 });
   });
 });
