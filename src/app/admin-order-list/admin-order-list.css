@@ -11,6 +11,18 @@
   margin: 0 0 16px;
 }
 
+.header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.header-actions > a,
+.header-actions > button {
+  flex: 1 1 auto;
+  min-height: 44px;
+}
+
 .filters-bar {
   display: flex;
   flex-direction: column;

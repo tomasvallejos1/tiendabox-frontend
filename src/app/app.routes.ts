@@ -4,6 +4,7 @@ import { AdminLayout } from './admin-layout/admin-layout';
 import { AdminCustomerList } from './admin-customer-list/admin-customer-list';
 import { CustomerForm } from './customer-form/customer-form';
 import { AdminOrderList } from './admin-order-list/admin-order-list';
+import { AdminOrderForm } from './admin-order-form/admin-order-form';
 import { CartPage } from './cart-page/cart-page';
 import { Login } from './login/login';
 import { NotFound } from './not-found/not-found';
@@ -43,6 +44,7 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'pedidos', pathMatch: 'full' },
       { path: 'pedidos', component: AdminOrderList },
+      { path: 'pedidos/new', component: AdminOrderForm },
       { path: 'clientes', component: AdminCustomerList },
       { path: 'clientes/new', component: CustomerForm },
       { path: 'clientes/:id/edit', component: CustomerForm },

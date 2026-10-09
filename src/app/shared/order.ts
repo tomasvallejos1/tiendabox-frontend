@@ -33,6 +33,7 @@ export interface Order {
 
 // Payload de creación de un pedido.
 export interface CreateOrderPayload {
+  customer_id?: string;
   delivery_type: string;
   delivery_address?: string;
   items?: { product_id: string; quantity: number }[];

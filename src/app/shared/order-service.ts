@@ -5,6 +5,8 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { CreateOrderPayload, Order, OrderStatus } from './order';
 
+export type { CreateOrderPayload } from './order';
+
 @Injectable({ providedIn: 'root' })
 export class OrderService {
   private readonly apiUrl = environment.apiUrl;

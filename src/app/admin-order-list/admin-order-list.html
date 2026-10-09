@@ -1,13 +1,13 @@
 <div class="panel-section-header">
   <h1>Pedidos</h1>
-  <button
-    mat-flat-button
-    class="panel-primary-action"
-    (click)="loadOrders()"
-    [disabled]="loading()"
-  >
-    <mat-icon>refresh</mat-icon>Actualizar pedidos
-  </button>
+  <div class="header-actions">
+    <a matButton="filled" routerLink="/admin/pedidos/new" class="panel-primary-action">
+      <mat-icon>add</mat-icon>Nuevo pedido
+    </a>
+    <button matButton="outlined" (click)="loadOrders()" [disabled]="loading()">
+      <mat-icon>refresh</mat-icon>Actualizar pedidos
+    </button>
+  </div>
 </div>
 
 <!-- Filtros -->

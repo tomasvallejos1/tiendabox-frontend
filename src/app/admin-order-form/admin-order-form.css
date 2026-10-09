@@ -1,0 +1,146 @@
+:host {
+  display: block;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 16px;
+  color: var(--mat-sys-on-surface);
+}
+
+form,
+.products-content,
+.delivery-content,
+.items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+mat-card-content {
+  padding-top: 20px;
+}
+
+mat-form-field {
+  width: 100%;
+  min-width: 0;
+}
+
+.customer-picker,
+.delivery-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.customer-picker > a {
+  align-self: flex-start;
+  min-height: 44px;
+}
+
+.option-details {
+  display: flex;
+  flex-direction: column;
+  padding-block: 8px;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.option-note,
+.encargo-note,
+.item-price {
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-medium);
+}
+
+.order-item {
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 12px;
+  padding: 16px;
+  min-width: 0;
+}
+
+.invalid-item {
+  border-color: var(--mat-sys-error);
+}
+
+.item-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.item-heading h2 {
+  margin: 0;
+  font: var(--mat-sys-title-medium);
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.item-actions {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.item-actions mat-form-field {
+  flex: 1;
+}
+
+.item-actions button {
+  flex-shrink: 0;
+  min-width: 48px;
+  min-height: 48px;
+}
+
+.summary-total {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  font: var(--mat-sys-title-medium);
+}
+
+.encargo-note,
+.field-error,
+.error-message {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.field-error,
+.error-message {
+  color: var(--mat-sys-error);
+}
+
+.order-item .field-error {
+  margin-top: 12px;
+}
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding-block: 32px;
+}
+
+@media (min-width: 600px) {
+  .customer-picker {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .customer-picker mat-form-field {
+    flex: 1;
+  }
+
+  .customer-picker > a {
+    flex-shrink: 0;
+    margin-top: 6px;
+  }
+
+  .item-actions mat-form-field {
+    flex: 0 1 220px;
+  }
+}

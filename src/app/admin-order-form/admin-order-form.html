@@ -1,0 +1,198 @@
+<div class="panel-section-header">
+  <h1>Nuevo pedido</h1>
+  <a matButton="text" routerLink="/admin/pedidos">Volver a pedidos</a>
+</div>
+
+@if (loading()) {
+  <div class="state" role="status">
+    <mat-spinner diameter="48" />
+    <p>Cargando clientes y productos…</p>
+  </div>
+} @else if (loadFailed()) {
+  <div class="state" role="alert">
+    <p class="error-message">{{ errorMessage() }}</p>
+    <button matButton="filled" (click)="loadOptions()">Reintentar</button>
+  </div>
+} @else {
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <mat-card appearance="outlined">
+      <mat-card-header><mat-card-title>Cliente</mat-card-title></mat-card-header>
+      <mat-card-content>
+        <div class="customer-picker">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
+            <mat-label>Buscar cliente por nombre o email</mat-label>
+            <mat-icon matPrefix>search</mat-icon>
+            <input matInput formControlName="customer" [matAutocomplete]="customerAutocomplete" />
+            <mat-autocomplete
+              #customerAutocomplete="matAutocomplete"
+              [displayWith]="displayCustomer"
+            >
+              @for (customer of filteredCustomers(); track customer.id) {
+                <mat-option [value]="customer">
+                  <span class="option-details">
+                    <span>{{ customer.name }}</span>
+                    <span class="option-note">{{ customer.email || 'Sin email' }}</span>
+                  </span>
+                </mat-option>
+              } @empty {
+                <mat-option disabled>No se encontraron clientes</mat-option>
+              }
+            </mat-autocomplete>
+            @if (form.controls.customer.invalid) {
+              <mat-error>Seleccioná un cliente de la lista</mat-error>
+            }
+          </mat-form-field>
+          <a matButton="text" routerLink="/admin/clientes/new">Crear cliente nuevo</a>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined">
+      <mat-card-header><mat-card-title>Productos del pedido</mat-card-title></mat-card-header>
+      <mat-card-content class="products-content">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Buscar producto por nombre</mat-label>
+          <mat-icon matPrefix>search</mat-icon>
+          <input
+            id="product-search"
+            matInput
+            [formControl]="productSearch"
+            [matAutocomplete]="productAutocomplete"
+          />
+          <mat-autocomplete
+            #productAutocomplete="matAutocomplete"
+            [displayWith]="displayProduct"
+            (optionSelected)="addProduct($event.option.value)"
+          >
+            @for (product of filteredProducts(); track product.id) {
+              <mat-option [value]="product">
+                <span class="option-details">
+                  <span>{{ product.name }}</span>
+                  <span class="option-note">
+                    @if (product.type === 'stock') {
+                      {{ product.price | currency: 'ARS' : 'symbol-narrow' }} · Stock:
+                      {{ product.stock }}
+                    } @else {
+                      Por encargo · A confirmar
+                    }
+                  </span>
+                </span>
+              </mat-option>
+            } @empty {
+              <mat-option disabled>No se encontraron productos</mat-option>
+            }
+          </mat-autocomplete>
+          <mat-hint>Seleccioná un producto para agregarlo al pedido</mat-hint>
+        </mat-form-field>
+
+        <div class="items-list">
+          @for (item of items(); track item.product.id) {
+            <article class="order-item" [class.invalid-item]="item.quantity.invalid">
+              <div class="item-heading">
+                <h2>{{ item.product.name }}</h2>
+                <app-product-type-badge [type]="item.product.type" />
+              </div>
+              <p class="item-price">
+                @if (item.product.type === 'encargo') {
+                  A confirmar
+                } @else {
+                  {{ item.product.price | currency: 'ARS' : 'symbol-narrow' }} c/u
+                }
+              </p>
+              <div class="item-actions">
+                <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                  <mat-label>Cantidad</mat-label>
+                  <input
+                    matInput
+                    type="number"
+                    inputmode="numeric"
+                    min="1"
+                    step="1"
+                    [attr.max]="item.product.type === 'stock' ? item.product.stock : null"
+                    [formControl]="item.quantity"
+                    [attr.aria-label]="'Cantidad de ' + item.product.name"
+                  />
+                  @if (item.product.type === 'stock') {
+                    <mat-hint>Máximo: {{ item.product.stock }} unidades</mat-hint>
+                  }
+                  @if (item.quantity.hasError('max')) {
+                    <mat-error>Solo quedan {{ item.product.stock }} unidades</mat-error>
+                  } @else if (item.quantity.invalid) {
+                    <mat-error>Ingresá una cantidad entera mayor a cero</mat-error>
+                  }
+                </mat-form-field>
+                <button
+                  matIconButton
+                  type="button"
+                  [disabled]="saving()"
+                  (click)="removeItem(item.product.id)"
+                  [attr.aria-label]="'Quitar ' + item.product.name + ' del pedido'"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+              @if (item.quantity.hasError('max')) {
+                <p class="field-error" role="alert">
+                  Solo quedan {{ item.product.stock }} unidades. Ajustá la cantidad.
+                </p>
+              }
+            </article>
+          } @empty {
+            <p [class.field-error]="submitted()">Agregá al menos un producto al pedido.</p>
+          }
+        </div>
+        <div class="summary-total">
+          <span>Total de productos en stock</span>
+          <strong>{{ total() | currency: 'ARS' : 'symbol-narrow' }}</strong>
+        </div>
+        @if (hasEncargoItems()) {
+          <p class="encargo-note" role="note">
+            Incluye productos por encargo cuyo precio se confirma al procesar el pedido. El total no
+            los incluye.
+          </p>
+        }
+        @if (blockReason()) {
+          <p class="field-error" role="alert">{{ blockReason() }}</p>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined">
+      <mat-card-header><mat-card-title>Datos de entrega</mat-card-title></mat-card-header>
+      <mat-card-content class="delivery-content">
+        <mat-radio-group
+          formControlName="delivery_type"
+          class="delivery-radio-group"
+          aria-label="Tipo de entrega"
+        >
+          <mat-radio-button value="retiro">Retiro en el local</mat-radio-button>
+          <mat-radio-button value="envio">Envío a domicilio</mat-radio-button>
+        </mat-radio-group>
+        @if (
+          form.controls.delivery_type.touched && form.controls.delivery_type.hasError('required')
+        ) {
+          <p class="field-error">Seleccioná un tipo de entrega</p>
+        }
+        @if (form.controls.delivery_type.value === 'envio') {
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
+            <mat-label>Dirección de envío</mat-label>
+            <input matInput formControlName="delivery_address" autocomplete="street-address" />
+            @if (form.controls.delivery_address.invalid) {
+              <mat-error>La dirección es obligatoria para envío a domicilio</mat-error>
+            }
+          </mat-form-field>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    @if (errorMessage()) {
+      <p class="error-message" role="alert">{{ errorMessage() }}</p>
+    }
+    <div class="panel-form-actions">
+      <button matButton="filled" type="submit" [disabled]="saving() || !!blockReason()">
+        {{ saving() ? 'Guardando…' : 'Guardar pedido' }}
+      </button>
+      <a matButton="text" routerLink="/admin/pedidos">Cancelar</a>
+    </div>
+  </form>
+}
