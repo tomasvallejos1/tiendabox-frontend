@@ -1,4 +1,5 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
@@ -11,7 +12,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { AuthService } from '../shared/auth-service';
 import { CustomerService } from '../shared/customer-service';
-import { TaxStatus } from '../shared/customer';
+import { governmentIdRule, TaxStatus } from '../shared/customer';
 
 @Component({
   selector: 'app-profile',
@@ -30,10 +31,12 @@ import { TaxStatus } from '../shared/customer';
 })
 export class Profile implements OnInit {
   private fb = inject(FormBuilder);
+  private destroyRef = inject(DestroyRef);
 
   protected readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.pattern(/\S/)]],
-    government_id: ['', [Validators.pattern(/^\d{11}$/)]],
+    // Sus validadores dependen de tax_status: los aplica applyGovernmentIdRule.
+    government_id: [''],
     tax_status: ['consumidor_final' as string],
     phone: [''],
     address: [''],
@@ -50,6 +53,8 @@ export class Profile implements OnInit {
   protected readonly loadFailed = signal(false);
   protected readonly saving = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
+  // Regla del documento para la condicion fiscal elegida (hint y mensaje de error del campo).
+  protected readonly documentRule = signal(governmentIdRule('consumidor_final'));
 
   private customerId: string | null = null;
 
@@ -60,6 +65,13 @@ export class Profile implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // Validacion condicional del documento: cambia con la condicion fiscal elegida. El
+    // patchValue de la carga del perfil tambien dispara valueChanges.
+    this.applyGovernmentIdRule(this.form.controls.tax_status.value);
+    this.form.controls.tax_status.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((taxStatus) => this.applyGovernmentIdRule(taxStatus));
+
     this.customerId = this.authService.getCustomerId();
     if (!this.customerId) {
       this.loadFailed.set(true);
@@ -111,5 +123,13 @@ export class Profile implements OnInit {
         this.errorMessage.set('No se pudo guardar el perfil. Intentá de nuevo.');
       },
     });
+  }
+
+  private applyGovernmentIdRule(taxStatus: string): void {
+    const rule = governmentIdRule(taxStatus);
+    this.documentRule.set(rule);
+    const control = this.form.controls.government_id;
+    control.setValidators(Validators.pattern(rule.pattern));
+    control.updateValueAndValidity();
   }
 }

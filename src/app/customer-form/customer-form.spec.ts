@@ -92,6 +92,74 @@ describe('CustomerForm', () => {
     expect(form.valid).toBe(true);
   });
 
+  // El documento valido depende de la condicion fiscal: consumidor final acepta DNI (7 u 8)
+  // o CUIT/CUIL (11); el resto, solo CUIT. Cambiar la condicion revalida el valor ya cargado.
+  it('changes the document validation and hint when the tax status changes', async () => {
+    const fixture = TestBed.createComponent(CustomerForm);
+    await fixture.whenStable();
+    const form = fixture.componentInstance['form'];
+    const governmentId = form.controls.government_id;
+    const field = () => fixture.nativeElement.textContent as string;
+
+    expect(form.controls.tax_status.value).toBe('consumidor_final');
+    expect(field()).toContain('Documento');
+    expect(field()).toContain('DNI o CUIT, sin puntos ni guiones');
+    for (const valid of ['30123456', '5123456', '20301234561']) {
+      governmentId.setValue(valid);
+      expect(governmentId.valid).toBe(true);
+    }
+    governmentId.setValue('301234567');
+    expect(governmentId.hasError('pattern')).toBe(true);
+
+    governmentId.setValue('30123456');
+    governmentId.markAsTouched();
+    form.controls.tax_status.setValue('responsable_inscripto');
+    await fixture.whenStable();
+    expect(governmentId.hasError('pattern')).toBe(true);
+    expect(field()).toContain('El CUIT debe tener 11 dígitos numéricos');
+    governmentId.setValue('30712345678');
+    expect(governmentId.valid).toBe(true);
+    await fixture.whenStable();
+    expect(field()).toContain('CUIT de 11 dígitos, sin guiones');
+
+    governmentId.setValue('30123456');
+    form.controls.tax_status.setValue('consumidor_final');
+    expect(governmentId.valid).toBe(true);
+  });
+
+  it.each(['consumidor_final', 'responsable_inscripto', 'monotributo', 'exento'])(
+    'accepts an empty document with tax status %s',
+    async (taxStatus) => {
+      const fixture = TestBed.createComponent(CustomerForm);
+      await fixture.whenStable();
+      const form = fixture.componentInstance['form'];
+      form.controls.tax_status.setValue(taxStatus);
+      form.controls.government_id.setValue('');
+      expect(form.controls.government_id.valid).toBe(true);
+    },
+  );
+
+  it('applies the CUIT rule to a saved responsable inscripto customer', async () => {
+    id = 'ri-id';
+    const fixture = TestBed.createComponent(CustomerForm);
+    await fixture.whenStable();
+    http.expectOne(environment.apiUrl + '/customer/ri-id').flush({
+      id,
+      user_id: null,
+      name: 'Empresa SA',
+      tax_status: 'responsable_inscripto',
+      government_id: '30712345678',
+      phone: null,
+      address: null,
+    });
+    await fixture.whenStable();
+    const governmentId = fixture.componentInstance['form'].controls.government_id;
+    expect(governmentId.valid).toBe(true);
+    expect(fixture.nativeElement.textContent).toContain('CUIT de 11 dígitos, sin guiones');
+    governmentId.setValue('30123456');
+    expect(governmentId.hasError('pattern')).toBe(true);
+  });
+
   it('edits only the commercial profile and explains local accounts', async () => {
     id = 'local-id';
     const fixture = TestBed.createComponent(CustomerForm);

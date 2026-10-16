@@ -12,7 +12,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { finalize } from 'rxjs';
 import { CustomerService } from '../shared/customer-service';
-import { CreateCustomerPayload, TaxStatus } from '../shared/customer';
+import { CreateCustomerPayload, governmentIdRule, TaxStatus } from '../shared/customer';
 import { GeneratedPasswordDialog } from '../generated-password-dialog/generated-password-dialog';
 
 @Component({
@@ -34,7 +34,8 @@ export class CustomerForm implements OnInit {
   private fb = inject(FormBuilder);
   protected readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.pattern(/\S/)]],
-    government_id: ['', Validators.pattern(/^\d{11}$/)],
+    // Sus validadores dependen de tax_status: los aplica applyGovernmentIdRule.
+    government_id: [''],
     tax_status: ['consumidor_final', Validators.required],
     phone: [''],
     address: [''],
@@ -49,6 +50,8 @@ export class CustomerForm implements OnInit {
   protected readonly loadFailed = signal(false);
   protected readonly saving = signal(false);
   protected readonly errorMessage = signal('');
+  // Regla del documento para la condicion fiscal elegida (hint y mensaje de error del campo).
+  protected readonly documentRule = signal(governmentIdRule('consumidor_final'));
   protected readonly taxStatusOptions: { value: TaxStatus; label: string }[] = [
     { value: 'consumidor_final', label: 'Consumidor final' },
     { value: 'responsable_inscripto', label: 'Responsable inscripto' },
@@ -76,7 +79,21 @@ export class CustomerForm implements OnInit {
         else email.clearValidators();
         email.updateValueAndValidity();
       });
+    // Validacion condicional del documento: cambia con la condicion fiscal elegida. El
+    // patchValue de loadCustomer tambien dispara valueChanges.
+    this.applyGovernmentIdRule(this.form.controls.tax_status.value);
+    this.form.controls.tax_status.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((taxStatus) => this.applyGovernmentIdRule(taxStatus));
     if (this.isEditing()) this.loadCustomer();
+  }
+
+  private applyGovernmentIdRule(taxStatus: string): void {
+    const rule = governmentIdRule(taxStatus);
+    this.documentRule.set(rule);
+    const control = this.form.controls.government_id;
+    control.setValidators(Validators.pattern(rule.pattern));
+    control.updateValueAndValidity();
   }
 
   protected loadCustomer(): void {

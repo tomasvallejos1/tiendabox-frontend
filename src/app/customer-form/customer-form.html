@@ -27,10 +27,11 @@
         }
       </mat-form-field>
       <mat-form-field
-        ><mat-label>CUIT</mat-label>
+        ><mat-label>Documento</mat-label>
         <input matInput formControlName="government_id" inputmode="numeric" maxlength="11" />
+        <mat-hint>{{ documentRule().hint }}</mat-hint>
         @if (form.controls.government_id.hasError('pattern')) {
-          <mat-error>El CUIT debe tener 11 dígitos.</mat-error>
+          <mat-error>{{ documentRule().error }}</mat-error>
         }
       </mat-form-field>
       <mat-form-field
