@@ -1,3 +1,8 @@
+<button matButton="text" class="back-button" (click)="goBack()">
+  <mat-icon>arrow_back</mat-icon>
+  Volver
+</button>
+
 @if (loading()) {
   <mat-spinner />
 } @else if (loadFailed()) {
@@ -16,6 +21,22 @@
         <span class="info-label">Estado</span>
         <app-order-status-badge [status]="order.status" />
       </div>
+
+      @if (authService.isOwner()) {
+        <div class="status-actions">
+          @if (nextOrderStatus(); as next) {
+            <button
+              matButton="tonal"
+              [disabled]="advancing() || cancelling()"
+              (click)="advanceStatus()"
+            >
+              Marcar como {{ statusLabels[next] | lowercase }}
+            </button>
+          } @else {
+            <span class="closed-hint">Pedido cerrado</span>
+          }
+        </div>
+      }
 
       <div class="info-row">
         <span class="info-label">Fecha</span>
@@ -94,7 +115,11 @@
             </button>
           </span>
           @if (canCancel) {
-            <button matButton="outlined" [disabled]="cancelling()" (click)="cancelOrder()">
+            <button
+              matButton="outlined"
+              [disabled]="cancelling() || advancing()"
+              (click)="cancelOrder()"
+            >
               <mat-icon>cancel</mat-icon>
               {{ cancelling() ? 'Cancelando…' : 'Cancelar pedido' }}
             </button>
@@ -186,19 +211,30 @@
 
   <!-- Acciones -->
   @if (summary().hasEncargoItems) {
-    <div class="quote-notice" role="note">
-      <h2>Productos a cotizar: {{ summary().quoteQuantity }}</h2>
-      <p>
-        El precio final de estos productos se acuerda por WhatsApp. Te vamos a contactar con la
-        cotización y la compra se coordina por ese medio.
-      </p>
-      <p>El pedido no implica pagar ni comprometerte a comprar los productos por encargo.</p>
-      @if (storeWhatsAppUrl(); as url) {
-        <a matButton="outlined" [href]="url" target="_blank" rel="noopener noreferrer"
-          ><mat-icon>chat</mat-icon>Escribir a la tienda</a
-        >
-      }
-    </div>
+    @if (!authService.isOwner()) {
+      <div class="quote-notice" role="note">
+        <h2>Productos a cotizar: {{ summary().quoteQuantity }}</h2>
+        <p>
+          El precio final de estos productos se acuerda por WhatsApp. Te vamos a contactar con la
+          cotización y la compra se coordina por ese medio.
+        </p>
+        <p>El pedido no implica pagar ni comprometerte a comprar los productos por encargo.</p>
+        @if (storeWhatsAppUrl(); as url) {
+          <a matButton="outlined" [href]="url" target="_blank" rel="noopener noreferrer"
+            ><mat-icon>chat</mat-icon>Escribir a la tienda</a
+          >
+        }
+      </div>
+    } @else {
+      <div class="owner-quote-notice" role="note">
+        <h2>Productos a cotizar: {{ summary().quoteQuantity }}</h2>
+        <p>
+          Contactá al cliente por WhatsApp para informarle el precio final y coordinar la compra de
+          estos productos.
+        </p>
+        <p>El pedido no implica un compromiso de compra de los productos por encargo.</p>
+      </div>
+    }
   }
 
   @if (errorMessage()) {
@@ -207,7 +243,7 @@
 
   @if (authService.isCliente() && canCancel) {
     <div class="actions">
-      <button matButton="tonal" [disabled]="cancelling()" (click)="cancelOrder()">
+      <button matButton="tonal" [disabled]="cancelling() || advancing()" (click)="cancelOrder()">
         <mat-icon>cancel</mat-icon>
         Cancelar pedido
       </button>

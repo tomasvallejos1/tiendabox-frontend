@@ -3,6 +3,8 @@ import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { Location } from '@angular/common';
+import { SpyLocation } from '@angular/common/testing';
 
 import { environment } from '../../environments/environment';
 import { Order, OrderStatus } from '../shared/order';
@@ -25,6 +27,7 @@ describe('OrderDetail', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: AuthService, useValue: auth },
+        { provide: Location, useClass: SpyLocation },
         {
           provide: ActivatedRoute,
           useValue: { snapshot: { paramMap: convertToParamMap({ id: 'abcd1234-5678' }) } },
@@ -119,6 +122,10 @@ describe('OrderDetail', () => {
       expect(notice.textContent).toContain(
         'El precio final de estos productos se acuerda por WhatsApp',
       );
+      expect(notice.textContent).toContain('Te vamos a contactar');
+      expect(notice.textContent).toContain('comprometerte a comprar');
+      expect(notice.textContent).toContain('Productos a cotizar: 2');
+      expect(fixture.nativeElement.querySelector('.owner-quote-notice')).toBeNull();
       expect(notice.querySelector('a')?.href).toBe(buildQuoteWhatsAppUrl(order.id));
       expect(notice.querySelector('a')?.textContent).toContain('Escribir a la tienda');
       if (kind === 'encargo') {
@@ -127,6 +134,157 @@ describe('OrderDetail', () => {
       }
     },
   );
+
+  it.each(['mixto', 'encargo'])(
+    'oculta el aviso del cliente y muestra la cotización para el dueño en un pedido %s',
+    async (kind) => {
+      const encargo = {
+        id: 'encargo',
+        product_id: 'encargo',
+        product_name: 'Caja por encargo',
+        type: 'encargo',
+        unit_price: null,
+        quantity: 2,
+      };
+      order.items = [encargo];
+      if (kind === 'mixto') {
+        order.items.push({
+          ...encargo,
+          id: 'stock',
+          product_id: 'stock',
+          type: 'stock',
+          unit_price: 1200,
+          quantity: 1,
+        });
+      }
+      await load();
+      expect(fixture.nativeElement.querySelector('.quote-notice')).toBeNull();
+      expect(fixture.nativeElement.textContent).not.toContain('Escribir a la tienda');
+      expect(fixture.nativeElement.textContent).not.toContain('Te vamos a contactar');
+      expect(fixture.nativeElement.textContent).not.toContain('comprometerte a comprar');
+      const notice: HTMLElement = fixture.nativeElement.querySelector('.owner-quote-notice');
+      expect(notice.textContent).toContain('Productos a cotizar: 2');
+      expect(notice.textContent).toContain('Contactá al cliente por WhatsApp');
+      expect(notice.querySelector('button, a')).toBeNull();
+      expect(fixture.nativeElement.querySelectorAll('.whatsapp-action button')).toHaveLength(1);
+    },
+  );
+
+  it('no muestra avisos de cotización si todos los productos tienen precio', async () => {
+    order.items = [
+      {
+        id: 'stock',
+        product_id: 'stock',
+        product_name: 'Caja',
+        type: 'stock',
+        unit_price: 1200,
+        quantity: 1,
+      },
+    ];
+    await load();
+    expect(fixture.nativeElement.querySelector('.quote-notice, .owner-quote-notice')).toBeNull();
+  });
+
+  it('vuelve usando el historial incluso mientras carga el pedido', async () => {
+    const goBack = vi.spyOn(TestBed.inject(Location), 'back');
+    fixture.detectChanges();
+    const back = button('Volver');
+    expect(back.querySelector('mat-icon')?.textContent).toBe('arrow_back');
+    back.click();
+    expect(goBack).toHaveBeenCalledOnce();
+    http.expectOne(`${environment.apiUrl}/order/${order.id}`).flush(order);
+    await fixture.whenStable();
+  });
+
+  it.each<[OrderStatus, OrderStatus, string]>([
+    ['pendiente', 'confirmado', 'confirmado'],
+    ['confirmado', 'en_preparacion', 'en preparación'],
+    ['en_preparacion', 'listo_para_retirar', 'listo para retirar'],
+    ['listo_para_retirar', 'entregado', 'entregado'],
+  ])('avanza de %s a %s y actualiza el detalle con la respuesta', async (current, next, label) => {
+    order.status = current;
+    await load();
+    button(`Marcar como ${label}`).click();
+    await fixture.whenStable();
+    expect(button('Marcar como').disabled).toBe(true);
+    expect(button('Cancelar pedido').disabled).toBe(true);
+
+    const request = http.expectOne(`${environment.apiUrl}/order/${order.id}/status`);
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual({ status: next });
+    const updated: Partial<Order> = {
+      ...order,
+      status: next,
+      delivery_type: 'envio',
+      delivery_address: 'Nueva dirección',
+    };
+    delete updated.customer;
+    request.flush(updated);
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('app-order-status-badge')?.textContent?.trim()).toBe(
+      label.charAt(0).toUpperCase() + label.slice(1),
+    );
+    expect(fixture.nativeElement.querySelector('.customer-card').textContent).toContain(
+      'María Pérez',
+    );
+    expect(fixture.nativeElement.querySelector('.delivery-address').textContent).toBe(
+      'Nueva dirección',
+    );
+    if (next === 'entregado') {
+      expect(fixture.nativeElement.querySelector('.status-actions button')).toBeNull();
+      expect(fixture.nativeElement.querySelector('.closed-hint').textContent).toContain(
+        'Pedido cerrado',
+      );
+    } else {
+      expect(button('Marcar como').disabled).toBe(false);
+      expect(button('Cancelar pedido').disabled).toBe(false);
+    }
+    http.expectNone(`${environment.apiUrl}/order/${order.id}`);
+  });
+
+  it.each(['entregado', 'cancelado'] as const)(
+    'oculta el avance y muestra un texto tenue en estado %s',
+    async (status) => {
+      order.status = status;
+      await load();
+      expect(fixture.nativeElement.querySelector('.status-actions button')).toBeNull();
+      expect(fixture.nativeElement.textContent).not.toContain('Marcar como');
+      expect(fixture.nativeElement.querySelector('.closed-hint').textContent).toContain(
+        'Pedido cerrado',
+      );
+    },
+  );
+
+  it('no muestra el avance del estado para un cliente', async () => {
+    auth.isOwner.mockReturnValue(false);
+    auth.isCliente.mockReturnValue(true);
+    order.status = 'pendiente';
+    await load();
+    expect(fixture.nativeElement.querySelector('.status-actions')).toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain('Marcar como');
+  });
+
+  it('conserva el estado y permite reintentar si falla el avance', async () => {
+    await load();
+    button('Marcar como listo para retirar').click();
+    http
+      .expectOne(`${environment.apiUrl}/order/${order.id}/status`)
+      .flush({}, { status: 500, statusText: 'Server Error' });
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('app-order-status-badge').textContent).toContain(
+      'En preparación',
+    );
+    expect(fixture.nativeElement.textContent).toContain('No se pudo actualizar el estado');
+    expect(button('Cancelar pedido').disabled).toBe(false);
+    expect(button('Marcar como listo para retirar').disabled).toBe(false);
+    button('Marcar como listo para retirar').click();
+    http
+      .expectOne(`${environment.apiUrl}/order/${order.id}/status`)
+      .flush({ ...order, status: 'listo_para_retirar' });
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('.action-error')).toBeNull();
+    expect(button('Marcar como entregado').disabled).toBe(false);
+  });
 
   it('oculta el bloque Cliente cuando el cliente ve su propio pedido', async () => {
     auth.isOwner.mockReturnValue(false);
@@ -210,6 +368,7 @@ describe('OrderDetail', () => {
     const request = http.expectOne(`${environment.apiUrl}/order/${order.id}/cancel`);
     expect(request.request.method).toBe('PUT');
     expect(request.request.body).toEqual({});
+    if (role === 'owner') expect(button('Marcar como').disabled).toBe(true);
     const updated: Partial<Order> = { ...order, status: 'cancelado' };
     delete updated.customer;
     request.flush(updated);
@@ -232,5 +391,24 @@ describe('OrderDetail', () => {
     await vi.waitFor(() => expect(document.querySelector('mat-dialog-container')).toBeNull());
     await fixture.whenStable();
     http.expectNone(`${environment.apiUrl}/order/${order.id}/cancel`);
+  });
+
+  it('no cancela si el pedido se entregó mientras la confirmación estaba abierta', async () => {
+    order.status = 'listo_para_retirar';
+    await load();
+    button('Cancelar pedido').click();
+    await fixture.whenStable();
+    button('Marcar como entregado').click();
+    http
+      .expectOne(`${environment.apiUrl}/order/${order.id}/status`)
+      .flush({ ...order, status: 'entregado' });
+    await fixture.whenStable();
+    button('Sí, cancelar', document).click();
+    await vi.waitFor(() => expect(document.querySelector('mat-dialog-container')).toBeNull());
+    await fixture.whenStable();
+    http.expectNone(`${environment.apiUrl}/order/${order.id}/cancel`);
+    expect(fixture.nativeElement.querySelector('.closed-hint').textContent).toContain(
+      'Pedido cerrado',
+    );
   });
 });

@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, OnInit, signal } from '@angular/core';
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import { CurrencyPipe, DatePipe, Location, LowerCasePipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -15,6 +15,7 @@ import { buildQuoteWhatsAppUrl, buildWhatsAppUrl } from '../shared/whatsapp';
 import { hasPrice, summarizeOrderItems } from '../shared/order-summary';
 import { ConfirmDialog, ConfirmDialogData } from '../confirm-dialog/confirm-dialog';
 import { OrderService } from '../shared/order-service';
+import { nextStatus, ORDER_STATUS_LABELS } from '../shared/order-status';
 import { AuthService } from '../shared/auth-service';
 import { OrderStatusBadge } from '../order-status-badge/order-status-badge';
 import { ProductTypeBadge } from '../product-type-badge/product-type-badge';
@@ -24,6 +25,7 @@ import { ProductTypeBadge } from '../product-type-badge/product-type-badge';
   imports: [
     CurrencyPipe,
     DatePipe,
+    LowerCasePipe,
     MatButtonModule,
     MatCardModule,
     MatIconModule,
@@ -42,6 +44,12 @@ export class OrderDetail implements OnInit {
   protected readonly loadFailed = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly order = signal<Order | null>(null);
+  protected readonly advancing = signal(false);
+  protected readonly nextOrderStatus = computed(() => {
+    const order = this.order();
+    return order ? nextStatus(order.status) : null;
+  });
+  protected readonly statusLabels = ORDER_STATUS_LABELS;
   protected readonly summary = computed(() => summarizeOrderItems(this.order()?.items ?? []));
   protected readonly hasPrice = hasPrice;
   protected readonly storeWhatsAppUrl = computed(() => {
@@ -63,11 +71,37 @@ export class OrderDetail implements OnInit {
     private orderService: OrderService,
     protected readonly authService: AuthService,
     private dialog: MatDialog,
+    private location: Location,
   ) {}
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id')!;
     this.loadOrder(id);
+  }
+
+  protected goBack(): void {
+    this.location.back();
+  }
+
+  protected advanceStatus(): void {
+    const order = this.order();
+    const next = this.nextOrderStatus();
+    if (!this.authService.isOwner() || !order || !next || this.advancing() || this.cancelling()) {
+      return;
+    }
+
+    this.advancing.set(true);
+    this.errorMessage.set(null);
+    this.orderService.changeStatus(order.id, next).subscribe({
+      next: (updated) => {
+        this.order.update((current) => (current ? { ...current, ...updated } : updated));
+        this.advancing.set(false);
+      },
+      error: () => {
+        this.advancing.set(false);
+        this.errorMessage.set('No se pudo actualizar el estado. Intentá de nuevo.');
+      },
+    });
   }
 
   protected get canCancel(): boolean {
@@ -104,7 +138,7 @@ export class OrderDetail implements OnInit {
 
   protected cancelOrder(): void {
     const order = this.order();
-    if (!order || !this.canCancel || this.cancelling()) return;
+    if (!order || !this.canCancel || this.cancelling() || this.advancing()) return;
 
     const data: ConfirmDialogData = {
       title: 'Cancelar pedido',
@@ -121,7 +155,7 @@ export class OrderDetail implements OnInit {
       })
       .afterClosed()
       .subscribe((confirmed) => {
-        if (!confirmed || !this.canCancel || this.cancelling()) return;
+        if (!confirmed || !this.canCancel || this.cancelling() || this.advancing()) return;
         this.cancelling.set(true);
         this.errorMessage.set(null);
 

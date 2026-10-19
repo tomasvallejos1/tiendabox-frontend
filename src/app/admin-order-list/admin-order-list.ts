@@ -15,27 +15,10 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { Order, OrderStatus } from '../shared/order';
 import { OrderService } from '../shared/order-service';
+import { nextStatus, ORDER_STATUS_FLOW, ORDER_STATUS_LABELS } from '../shared/order-status';
 import { OrderStatusBadge } from '../order-status-badge/order-status-badge';
 import { buildWhatsAppUrl } from '../shared/whatsapp';
 import { ConfirmDialog, ConfirmDialogData } from '../confirm-dialog/confirm-dialog';
-
-// Flujo lineal de estados. El backend solo permite avanzar un paso por vez.
-const FLUJO: OrderStatus[] = [
-  'pendiente',
-  'confirmado',
-  'en_preparacion',
-  'listo_para_retirar',
-  'entregado',
-];
-
-const STATUS_LABELS: Record<OrderStatus, string> = {
-  pendiente: 'Pendiente',
-  confirmado: 'Confirmado',
-  en_preparacion: 'En preparación',
-  listo_para_retirar: 'Listo para retirar',
-  entregado: 'Entregado',
-  cancelado: 'Cancelado',
-};
 
 @Component({
   selector: 'app-admin-order-list',
@@ -92,7 +75,7 @@ export class AdminOrderList implements OnInit {
 
   protected readonly filterOptions: { value: string; label: string }[] = [
     { value: '', label: 'Todos' },
-    ...FLUJO.map((s) => ({ value: s, label: STATUS_LABELS[s] })),
+    ...ORDER_STATUS_FLOW.map((s) => ({ value: s, label: ORDER_STATUS_LABELS[s] })),
     { value: 'cancelado', label: 'Cancelado' },
   ];
 
@@ -116,14 +99,12 @@ export class AdminOrderList implements OnInit {
   }
 
   protected nextStatus(order: Order): OrderStatus | null {
-    const idx = FLUJO.indexOf(order.status);
-    if (idx === -1 || idx >= FLUJO.length - 1) return null;
-    return FLUJO[idx + 1];
+    return nextStatus(order.status);
   }
 
   protected nextStatusLabel(order: Order): string | null {
     const next = this.nextStatus(order);
-    return next ? STATUS_LABELS[next] : null;
+    return next ? ORDER_STATUS_LABELS[next] : null;
   }
 
   /** Resumen de ítems por tipo, por ejemplo "2 en stock, 1 por encargo". */
@@ -192,7 +173,7 @@ export class AdminOrderList implements OnInit {
           list.map((o) => (o.id === updated.id ? { ...o, ...updated } : o)),
         );
         this.removeAdvancing(order.id);
-        this.snackBar.open(`Pedido actualizado: ${STATUS_LABELS[updated.status]}`, 'Cerrar', {
+        this.snackBar.open(`Pedido actualizado: ${ORDER_STATUS_LABELS[updated.status]}`, 'Cerrar', {
           duration: 3000,
         });
       },

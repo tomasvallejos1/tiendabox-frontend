@@ -11,6 +11,21 @@
   margin: 0 0 16px;
 }
 
+.back-button {
+  margin-bottom: 16px;
+  min-height: 48px;
+}
+
+.status-actions button {
+  width: 100%;
+  min-height: 48px;
+}
+
+.closed-hint {
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-medium);
+}
+
 .section-title {
   font: var(--mat-sys-title-medium);
   color: var(--mat-sys-on-surface);
@@ -118,21 +133,32 @@
   color: var(--mat-sys-on-surface-variant);
 }
 
-.quote-notice {
+.quote-notice,
+.owner-quote-notice {
   margin-top: 24px;
   padding: 16px;
   border-radius: 12px;
-  background: var(--mat-sys-tertiary-container);
-  color: var(--mat-sys-on-tertiary-container);
   overflow-wrap: anywhere;
 }
 
-.quote-notice h2 {
+.quote-notice {
+  background: var(--mat-sys-tertiary-container);
+  color: var(--mat-sys-on-tertiary-container);
+}
+
+.owner-quote-notice {
+  background: var(--mat-sys-surface-container);
+  color: var(--mat-sys-on-surface);
+}
+
+.quote-notice h2,
+.owner-quote-notice h2 {
   margin: 0;
   font: var(--mat-sys-title-medium);
 }
 
-.quote-notice p {
+.quote-notice p,
+.owner-quote-notice p {
   font: var(--mat-sys-body-medium);
 }
 
@@ -142,6 +168,7 @@
 }
 
 @media (min-width: 600px) {
+  .status-actions button,
   .quote-notice a {
     width: auto;
   }
