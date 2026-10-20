@@ -61,10 +61,6 @@ describe('Navbar', () => {
     });
   }
 
-  it('should create', () => {
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
   it('muestra un único carrito para el cliente, en la barra y fuera del menú', async () => {
     role.set('cliente');
     await fixture.whenStable();

@@ -1,31 +1,32 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component } from '@angular/core';
+import { beforeEach, describe, expect, it } from 'vitest';
 
+import { OrderStatus } from '../shared/order';
 import { OrderStatusBadge } from './order-status-badge';
 
-// Wrapper necesario porque el input es required.
-@Component({
-  selector: 'app-test-host',
-  imports: [OrderStatusBadge],
-  template: '<app-order-status-badge [status]="status" />',
-})
-class TestHost {
-  status: 'pendiente' | 'confirmado' = 'pendiente';
-}
-
 describe('OrderStatusBadge', () => {
-  let fixture: ComponentFixture<TestHost>;
+  let fixture: ComponentFixture<OrderStatusBadge>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TestHost],
+      imports: [OrderStatusBadge],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(TestHost);
-    await fixture.whenStable();
+    fixture = TestBed.createComponent(OrderStatusBadge);
   });
 
-  it('should create', () => {
-    expect(fixture.componentInstance).toBeTruthy();
+  const labels: [OrderStatus, string][] = [
+    ['pendiente', 'Pendiente'],
+    ['confirmado', 'Confirmado'],
+    ['en_preparacion', 'En preparación'],
+    ['listo_para_retirar', 'Listo para retirar'],
+    ['entregado', 'Entregado'],
+    ['cancelado', 'Cancelado'],
+  ];
+
+  it.each(labels)('muestra "%s" como "%s"', async (status, label) => {
+    fixture.componentRef.setInput('status', status);
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('mat-chip').textContent.trim()).toBe(label);
   });
 });

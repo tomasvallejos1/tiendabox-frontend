@@ -19,10 +19,6 @@ describe('ProductTypeBadge', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
-  it('should create', () => {
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
   it('should show "En stock" for stock products', async () => {
     const el = await render('stock');
     expect(el.querySelector('mat-chip')?.textContent).toContain('En stock');
