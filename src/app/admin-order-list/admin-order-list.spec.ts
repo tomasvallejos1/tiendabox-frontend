@@ -3,6 +3,10 @@ import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
+import { MatSelectHarness } from '@angular/material/select/testing';
+import { MatTooltip } from '@angular/material/tooltip';
+import { By } from '@angular/platform-browser';
 
 import { environment } from '../../environments/environment';
 import { Order } from '../shared/order';
@@ -61,10 +65,32 @@ describe('AdminOrderList', () => {
   }
 
   async function confirmCancellation(): Promise<void> {
-    button('Cancelar pedido').click();
+    await chooseAction('Cancelar pedido');
     await fixture.whenStable();
     button('Sí, cancelar', document).click();
     await vi.waitFor(() => expect(document.querySelector('mat-dialog-container')).toBeNull());
+    await fixture.whenStable();
+  }
+
+  async function openMenu(root = '.orders-cards'): Promise<HTMLElement> {
+    button('more_vert', fixture.nativeElement.querySelector(root)).click();
+    await fixture.whenStable();
+    const menu = document.querySelector<HTMLElement>('[role="menu"]');
+    expect(menu).not.toBeNull();
+    return menu!;
+  }
+
+  async function chooseAction(text: string): Promise<void> {
+    const menu = await openMenu();
+    button(text, menu).click();
+    await fixture.whenStable();
+    await vi.waitFor(() => expect(document.querySelector('[role="menu"]')).toBeNull());
+  }
+
+  async function search(selector: string, value: string): Promise<void> {
+    const input: HTMLInputElement = fixture.nativeElement.querySelector(selector);
+    input.value = value;
+    input.dispatchEvent(new Event('input'));
     await fixture.whenStable();
   }
 
@@ -94,6 +120,70 @@ describe('AdminOrderList', () => {
     expect(fixture.nativeElement.textContent).toContain('No se encontraron pedidos');
   });
 
+  it('filtra por ID parcial sin distinguir mayúsculas ni hacer otra petición', async () => {
+    order.id = 'a1b2c3d4-39e8-ABCD';
+    await load([order, { ...order, id: 'otro-pedido' }]);
+
+    await search('.order-id-filter input', '  A1B2  ');
+    expect(fixture.nativeElement.querySelectorAll('.order-card')).toHaveLength(1);
+    expect(fixture.nativeElement.querySelector('.order-card').textContent).toContain('#a1b2c3d4');
+    expect(fixture.nativeElement.querySelectorAll('.orders-table tr[mat-row]')).toHaveLength(1);
+
+    await search('.order-id-filter input', '39e8-abcd');
+    expect(fixture.nativeElement.querySelectorAll('.order-card')).toHaveLength(1);
+
+    await search('.order-id-filter input', 'inexistente');
+    expect(fixture.nativeElement.textContent).toContain('No se encontraron pedidos');
+    http.expectNone(() => true);
+
+    button('close').click();
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('.order-id-filter input').value).toBe('');
+    expect(fixture.nativeElement.querySelectorAll('.order-card')).toHaveLength(2);
+  });
+
+  it('combina ID, cliente y estado, y al limpiar el ID conserva los otros filtros', async () => {
+    await load();
+    await search('.order-id-filter input', 'ABCD');
+    await search('.customer-filter input', 'MARÍA');
+
+    const select = await TestbedHarnessEnvironment.loader(fixture).getHarness(MatSelectHarness);
+    await select.open();
+    await select.clickOptions({ text: 'En preparación' });
+    const request = http.expectOne(
+      (req) =>
+        req.url === `${environment.apiUrl}/orders` && req.params.get('status') === 'en_preparacion',
+    );
+    request.flush([
+      order,
+      { ...order, id: 'other' },
+      { ...order, id: 'abcd5678', customer: { ...order.customer!, name: 'Juan' } },
+    ]);
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelectorAll('.order-card')).toHaveLength(1);
+
+    button('close').click();
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelectorAll('.order-card')).toHaveLength(2);
+    expect(await select.getValueText()).toBe('En preparación');
+    expect(fixture.nativeElement.querySelector('.customer-filter input').value).toBe('MARÍA');
+    http.expectNone(() => true);
+  });
+
+  it.each(['.orders-cards', '.orders-table'])(
+    'agrupa el avance y la cancelación en el menú de %s',
+    async (root) => {
+      await load();
+      const actions: HTMLElement = fixture.nativeElement.querySelector(root);
+      expect(actions.querySelector('[aria-label="Ver detalle"], a[matButton]')).not.toBeNull();
+      expect(actions.querySelector('.whatsapp-action button')).not.toBeNull();
+      expect(actions.textContent).not.toContain('Cancelar pedido');
+      const menu = await openMenu(root);
+      expect(menu.textContent).toContain('Marcar como listo para retirar');
+      expect(button('Cancelar pedido', menu).classList.contains('cancel-action')).toBe(true);
+    },
+  );
+
   it('abre WhatsApp con el mensaje y el teléfono normalizado en otra pestaña', async () => {
     const open = vi.spyOn(window, 'open').mockReturnValue(null);
     await load();
@@ -114,10 +204,20 @@ describe('AdminOrderList', () => {
     async (phone) => {
       order.customer!.phone = phone;
       await load();
-      expect(fixture.nativeElement.querySelector('.whatsapp-action button').disabled).toBe(true);
-      expect(fixture.nativeElement.querySelector('.whatsapp-action').getAttribute('tabindex')).toBe(
-        '0',
-      );
+      const open = vi.spyOn(window, 'open').mockReturnValue(null);
+      const actions = fixture.debugElement
+        .queryAll(By.directive(MatTooltip))
+        .filter((element) => element.nativeElement.classList.contains('whatsapp-action'));
+      expect(actions).toHaveLength(2);
+      for (const action of actions) {
+        expect(action.nativeElement.querySelector('button').disabled).toBe(true);
+        expect(action.nativeElement.getAttribute('tabindex')).toBe('0');
+        expect(action.injector.get(MatTooltip).message).toBe(
+          'El cliente no tiene teléfono cargado',
+        );
+        action.nativeElement.querySelector('button').click();
+      }
+      expect(open).not.toHaveBeenCalled();
     },
   );
 
@@ -134,8 +234,9 @@ describe('AdminOrderList', () => {
     const request = http.expectOne(`${environment.apiUrl}/order/${order.id}/cancel`);
     expect(request.request.method).toBe('PUT');
     expect(request.request.body).toEqual({});
-    expect(button('Cancelar pedido').disabled).toBe(true);
-    expect(button('Marcar como').disabled).toBe(true);
+    const menu = await openMenu();
+    expect(button('Cancelar pedido', menu).disabled).toBe(true);
+    expect(button('Marcar como', menu).disabled).toBe(true);
     const updated: Partial<Order> = { ...order, status: 'cancelado' };
     delete updated.customer;
     request.flush(updated);
@@ -149,8 +250,7 @@ describe('AdminOrderList', () => {
 
   it('no cancela si se descarta el diálogo', async () => {
     await load();
-    button('Cancelar pedido').click();
-    await fixture.whenStable();
+    await chooseAction('Cancelar pedido');
     button('No, volver', document).click();
     await vi.waitFor(() => expect(document.querySelector('mat-dialog-container')).toBeNull());
     await fixture.whenStable();
@@ -167,7 +267,8 @@ describe('AdminOrderList', () => {
       .expectOne(`${environment.apiUrl}/order/${order.id}/cancel`)
       .flush({}, { status: 500, statusText: 'Server Error' });
     await fixture.whenStable();
-    expect(button('Cancelar pedido').disabled).toBe(false);
+    const menu = await openMenu();
+    expect(button('Cancelar pedido', menu).disabled).toBe(false);
     expect(fixture.nativeElement.textContent).toContain('No se pudo cancelar el pedido');
     expect(fixture.nativeElement.querySelector('.order-card').textContent).toContain(
       'En preparación',
@@ -175,28 +276,35 @@ describe('AdminOrderList', () => {
   });
 
   it.each(['entregado', 'cancelado'] as const)(
-    'oculta la cancelación en estado %s',
+    'oculta el menú en estado final %s y mantiene las acciones principales',
     async (status) => {
       order.status = status;
       await load();
       expect(fixture.nativeElement.querySelector('.order-card').textContent).not.toContain(
         'Cancelar pedido',
       );
+      expect(
+        fixture.nativeElement.querySelector('[aria-label="Más acciones del pedido"]'),
+      ).toBeNull();
+      expect(fixture.nativeElement.querySelectorAll('.whatsapp-action button')).toHaveLength(2);
+      expect(
+        fixture.nativeElement.querySelector('.orders-table a[aria-label="Ver detalle"]'),
+      ).not.toBeNull();
     },
   );
 
   it('bloquea cancelar mientras avanza el estado', async () => {
     await load();
-    button('Marcar como').click();
-    await fixture.whenStable();
-    expect(button('Cancelar pedido').disabled).toBe(true);
+    await chooseAction('Marcar como');
+    const menu = await openMenu();
+    expect(button('Cancelar pedido', menu).disabled).toBe(true);
     const request = http.expectOne(`${environment.apiUrl}/order/${order.id}/status`);
     expect(request.request.body).toEqual({ status: 'listo_para_retirar' });
     const updated: Partial<Order> = { ...order, status: 'listo_para_retirar' };
     delete updated.customer;
     request.flush(updated);
     await fixture.whenStable();
-    expect(button('Cancelar pedido').disabled).toBe(false);
+    expect(button('Cancelar pedido', menu).disabled).toBe(false);
     expect(fixture.nativeElement.querySelector('.customer-name').textContent).toContain(
       'María Pérez',
     );
@@ -206,12 +314,9 @@ describe('AdminOrderList', () => {
   it('no cancela si el pedido se entregó mientras la confirmación estaba abierta', async () => {
     order.status = 'listo_para_retirar';
     await load();
-    button('Cancelar pedido').click();
-    await fixture.whenStable();
-    button('Marcar como').click();
-    http
-      .expectOne(`${environment.apiUrl}/order/${order.id}/status`)
-      .flush({ ...order, status: 'entregado' });
+    await chooseAction('Cancelar pedido');
+    button('Actualizar pedidos').click();
+    http.expectOne(`${environment.apiUrl}/orders`).flush([{ ...order, status: 'entregado' }]);
     await fixture.whenStable();
     button('Sí, cancelar', document).click();
     await vi.waitFor(() => expect(document.querySelector('mat-dialog-container')).toBeNull());

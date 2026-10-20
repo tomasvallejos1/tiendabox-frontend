@@ -7,6 +7,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
@@ -33,6 +34,7 @@ import { ConfirmDialog, ConfirmDialogData } from '../confirm-dialog/confirm-dial
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
+    MatMenuModule,
     MatProgressSpinnerModule,
     MatSelectModule,
     MatSnackBarModule,
@@ -50,6 +52,7 @@ export class AdminOrderList implements OnInit {
   protected readonly orders = signal<Order[]>([]);
   protected readonly selectedStatus = signal<string>('');
   protected readonly customerFilter = signal('');
+  protected readonly orderIdFilter = signal('');
 
   // IDs de pedidos cuyo estado se está actualizando (para deshabilitar el botón de esa fila).
   protected readonly advancing = signal<Set<string>>(new Set());
@@ -58,9 +61,13 @@ export class AdminOrderList implements OnInit {
   protected readonly cancelling = signal<Set<string>>(new Set());
 
   protected readonly filteredOrders = computed(() => {
-    const filter = this.customerFilter().trim().toLowerCase();
-    if (!filter) return this.orders();
-    return this.orders().filter((o) => o.customer?.name?.toLowerCase().includes(filter));
+    const customer = this.customerFilter().trim().toLowerCase();
+    const orderId = this.orderIdFilter().trim().toLowerCase();
+    return this.orders().filter(
+      (order) =>
+        (!customer || order.customer?.name?.toLowerCase().includes(customer)) &&
+        (!orderId || order.id.toLowerCase().includes(orderId)),
+    );
   });
 
   protected readonly displayedColumns = [
@@ -195,6 +202,7 @@ export class AdminOrderList implements OnInit {
       message: `¿Estás seguro de que querés cancelar el pedido #${shortId}?`,
       confirmLabel: 'Sí, cancelar',
       cancelLabel: 'No, volver',
+      isDestructive: true,
     };
 
     this.dialog
