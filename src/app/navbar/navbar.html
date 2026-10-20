@@ -1,7 +1,9 @@
 <mat-toolbar class="navbar">
   <div class="navbar-content">
     <!-- Logo / Nombre del sitio -->
-    <a class="navbar-brand" routerLink="/productos">TiendaBox</a>
+    <a class="navbar-brand" routerLink="/productos" (click)="mobileMenuOpen.set(false)"
+      >TiendaBox</a
+    >
 
     <!-- Links de escritorio -->
     <div class="navbar-links">
@@ -19,16 +21,6 @@
 
         <span class="spacer"></span>
 
-        <a matButton="text" routerLink="/carrito" routerLinkActive="active-link">
-          <mat-icon
-            [matBadge]="cartService.itemCount()"
-            matBadgeColor="warn"
-            [matBadgeHidden]="cartService.itemCount() === 0"
-            matBadgeSize="small"
-          >
-            shopping_cart
-          </mat-icon>
-        </a>
         <a matButton="text" routerLink="/mis-pedidos" routerLinkActive="active-link">
           Mis pedidos
         </a>
@@ -46,86 +38,102 @@
       }
     </div>
 
+    @if (authService.isLoggedIn() && authService.isCliente()) {
+      <a
+        class="navbar-cart"
+        matIconButton
+        routerLink="/carrito"
+        routerLinkActive="active-link"
+        [attr.aria-label]="'Ver carrito (' + cartService.itemCount() + ' productos)'"
+        (click)="mobileMenuOpen.set(false)"
+      >
+        <mat-icon
+          [matBadge]="cartService.itemCount()"
+          matBadgeDescription="Productos en el carrito"
+          matBadgeSize="small"
+          >shopping_cart</mat-icon
+        >
+      </a>
+    }
+
     <!-- Botón hamburguesa para móvil -->
-    <button class="navbar-toggle" matIconButton (click)="mobileMenuOpen = !mobileMenuOpen">
-      <mat-icon>{{ mobileMenuOpen ? 'close' : 'menu' }}</mat-icon>
+    <button
+      class="navbar-toggle"
+      matIconButton
+      (click)="mobileMenuOpen.set(!mobileMenuOpen())"
+      [attr.aria-label]="mobileMenuOpen() ? 'Cerrar menú' : 'Abrir menú'"
+      aria-controls="navbar-mobile-navigation"
+      [attr.aria-expanded]="mobileMenuOpen()"
+    >
+      <mat-icon>{{ mobileMenuOpen() ? 'close' : 'menu' }}</mat-icon>
     </button>
   </div>
-
-  <!-- Menú móvil desplegable -->
-  @if (mobileMenuOpen) {
-    <div class="navbar-mobile-menu">
-      @if (!authService.isLoggedIn()) {
-        <a
-          matButton="text"
-          routerLink="/productos"
-          routerLinkActive="active-link"
-          (click)="mobileMenuOpen = false"
-          >Catálogo</a
-        >
-        <a
-          matButton="tonal"
-          routerLink="/login"
-          routerLinkActive="active-link"
-          (click)="mobileMenuOpen = false"
-          >Ingresar</a
-        >
-        <a
-          matButton="filled"
-          routerLink="/registro"
-          routerLinkActive="active-link"
-          (click)="mobileMenuOpen = false"
-          >Crear cuenta</a
-        >
-      } @else if (authService.isCliente()) {
-        <a
-          matButton="text"
-          routerLink="/productos"
-          routerLinkActive="active-link"
-          (click)="mobileMenuOpen = false"
-          >Catálogo</a
-        >
-        <a
-          matButton="text"
-          routerLink="/carrito"
-          routerLinkActive="active-link"
-          (click)="mobileMenuOpen = false"
-        >
-          <mat-icon
-            [matBadge]="cartService.itemCount()"
-            matBadgeColor="warn"
-            [matBadgeHidden]="cartService.itemCount() === 0"
-            matBadgeSize="small"
-          >
-            shopping_cart
-          </mat-icon>
-          Carrito
-        </a>
-        <a
-          matButton="text"
-          routerLink="/mis-pedidos"
-          routerLinkActive="active-link"
-          (click)="mobileMenuOpen = false"
-          >Mis pedidos</a
-        >
-        <a
-          matButton="text"
-          routerLink="/perfil"
-          routerLinkActive="active-link"
-          (click)="mobileMenuOpen = false"
-          >Mi perfil</a
-        >
-        <button matButton="text" (click)="logout(); mobileMenuOpen = false">Salir</button>
-      } @else if (authService.isOwner()) {
-        <a
-          matButton="text"
-          routerLink="/admin"
-          routerLinkActive="active-link"
-          (click)="mobileMenuOpen = false"
-          >Panel</a
-        >
-        <button matButton="text" (click)="logout(); mobileMenuOpen = false">Salir</button>
-      }
-    </div>
-  }
 </mat-toolbar>
+
+<!-- El desplegable queda fuera de la fila de altura fija del toolbar. -->
+@if (mobileMenuOpen()) {
+  <nav
+    id="navbar-mobile-navigation"
+    class="navbar-mobile-menu"
+    aria-label="Navegación principal"
+    (keydown.escape)="mobileMenuOpen.set(false)"
+  >
+    @if (!authService.isLoggedIn()) {
+      <a
+        matButton="text"
+        routerLink="/productos"
+        routerLinkActive="active-link"
+        (click)="mobileMenuOpen.set(false)"
+        >Catálogo</a
+      >
+      <a
+        matButton="tonal"
+        routerLink="/login"
+        routerLinkActive="active-link"
+        (click)="mobileMenuOpen.set(false)"
+        >Ingresar</a
+      >
+      <a
+        matButton="filled"
+        routerLink="/registro"
+        routerLinkActive="active-link"
+        (click)="mobileMenuOpen.set(false)"
+        >Crear cuenta</a
+      >
+    } @else if (authService.isCliente()) {
+      <a
+        matButton="text"
+        routerLink="/productos"
+        routerLinkActive="active-link"
+        (click)="mobileMenuOpen.set(false)"
+        >Catálogo</a
+      >
+      <a
+        matButton="text"
+        routerLink="/mis-pedidos"
+        routerLinkActive="active-link"
+        (click)="mobileMenuOpen.set(false)"
+        >Mis pedidos</a
+      >
+      <a
+        matButton="text"
+        routerLink="/perfil"
+        routerLinkActive="active-link"
+        (click)="mobileMenuOpen.set(false)"
+        >Mi perfil</a
+      >
+      <button matButton="text" (click)="logout(); mobileMenuOpen.set(false)">Salir</button>
+    } @else if (authService.isOwner()) {
+      @for (link of ownerLinks; track link.path) {
+        <a
+          matButton="text"
+          [routerLink]="link.path"
+          routerLinkActive="active-link"
+          (click)="mobileMenuOpen.set(false)"
+          >{{ link.label }}</a
+        >
+      }
+      <button matButton="text" (click)="logout(); mobileMenuOpen.set(false)">Salir</button>
+    }
+  </nav>
+}

@@ -1,4 +1,5 @@
 :host {
+  --panel-toolbar-height: var(--mat-toolbar-mobile-height, 56px);
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -21,6 +22,8 @@
 .panel-sidenav {
   width: 260px;
   max-width: 85vw;
+  /* Reservar las dos barras y el padding vertical del contenido de la app. */
+  max-height: calc(100dvh - 2 * var(--panel-toolbar-height) - 48px);
   background: var(--mat-sys-surface-container-low);
   border-right: 1px solid var(--mat-sys-outline-variant);
 }
@@ -44,6 +47,10 @@ mat-nav-list {
   padding: 8px;
 }
 
+mat-nav-list a {
+  min-height: 44px;
+}
+
 .store-link {
   margin-top: auto;
 }
@@ -55,4 +62,16 @@ mat-nav-list {
 
 .panel-content {
   min-width: 0;
+}
+
+@media (min-width: 600px) {
+  :host {
+    --panel-toolbar-height: var(--mat-toolbar-standard-height, 64px);
+  }
+}
+
+@media (min-width: 960px) {
+  .panel-sidenav {
+    max-height: none;
+  }
 }

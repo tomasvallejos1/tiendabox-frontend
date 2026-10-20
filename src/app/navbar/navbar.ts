@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
@@ -22,7 +22,15 @@ import { CartService } from '../shared/cart-service';
   styleUrl: './navbar.css',
 })
 export class Navbar {
-  protected mobileMenuOpen = false;
+  protected readonly mobileMenuOpen = signal(false);
+  protected readonly ownerLinks = [
+    { path: '/productos', label: 'Catálogo' },
+    { path: '/admin/productos', label: 'Productos' },
+    { path: '/admin/categorias', label: 'Categorías' },
+    { path: '/admin/marcas', label: 'Marcas' },
+    { path: '/admin/pedidos', label: 'Pedidos' },
+    { path: '/admin/clientes', label: 'Clientes' },
+  ];
 
   constructor(
     protected authService: AuthService,
