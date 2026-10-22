@@ -23,14 +23,6 @@ import { CartService } from '../shared/cart-service';
 })
 export class Navbar {
   protected readonly mobileMenuOpen = signal(false);
-  protected readonly ownerLinks = [
-    { path: '/productos', label: 'Catálogo' },
-    { path: '/admin/productos', label: 'Productos' },
-    { path: '/admin/categorias', label: 'Categorías' },
-    { path: '/admin/marcas', label: 'Marcas' },
-    { path: '/admin/pedidos', label: 'Pedidos' },
-    { path: '/admin/clientes', label: 'Clientes' },
-  ];
 
   constructor(
     protected authService: AuthService,

@@ -2,7 +2,7 @@ import { Component, computed, input } from '@angular/core';
 import { MatChipsModule } from '@angular/material/chips';
 
 const TYPE_CONFIG: Record<string, { label: string; cssClass: string }> = {
-  stock: { label: 'En stock', cssClass: 'type-stock' },
+  stock: { label: 'Retiro inmediato', cssClass: 'type-stock' },
   encargo: { label: 'Por encargo', cssClass: 'type-encargo' },
 };
 

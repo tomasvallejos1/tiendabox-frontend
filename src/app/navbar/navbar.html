@@ -56,17 +56,33 @@
       </a>
     }
 
-    <!-- Botón hamburguesa para móvil -->
-    <button
-      class="navbar-toggle"
-      matIconButton
-      (click)="mobileMenuOpen.set(!mobileMenuOpen())"
-      [attr.aria-label]="mobileMenuOpen() ? 'Cerrar menú' : 'Abrir menú'"
-      aria-controls="navbar-mobile-navigation"
-      [attr.aria-expanded]="mobileMenuOpen()"
-    >
-      <mat-icon>{{ mobileMenuOpen() ? 'close' : 'menu' }}</mat-icon>
-    </button>
+    @if (authService.isOwner()) {
+      <!-- Owner en móvil: las secciones viven en el menú del panel, acá solo cuenta. -->
+      <a
+        class="navbar-owner-action"
+        matIconButton
+        routerLink="/admin"
+        routerLinkActive="active-link"
+        aria-label="Panel de administración"
+      >
+        <mat-icon>admin_panel_settings</mat-icon>
+      </a>
+      <button class="navbar-owner-action" matIconButton (click)="logout()" aria-label="Salir">
+        <mat-icon>logout</mat-icon>
+      </button>
+    } @else {
+      <!-- Botón hamburguesa para móvil -->
+      <button
+        class="navbar-toggle"
+        matIconButton
+        (click)="mobileMenuOpen.set(!mobileMenuOpen())"
+        [attr.aria-label]="mobileMenuOpen() ? 'Cerrar menú' : 'Abrir menú'"
+        aria-controls="navbar-mobile-navigation"
+        [attr.aria-expanded]="mobileMenuOpen()"
+      >
+        <mat-icon>{{ mobileMenuOpen() ? 'close' : 'menu' }}</mat-icon>
+      </button>
+    }
   </div>
 </mat-toolbar>
 
@@ -122,17 +138,6 @@
         (click)="mobileMenuOpen.set(false)"
         >Mi perfil</a
       >
-      <button matButton="text" (click)="logout(); mobileMenuOpen.set(false)">Salir</button>
-    } @else if (authService.isOwner()) {
-      @for (link of ownerLinks; track link.path) {
-        <a
-          matButton="text"
-          [routerLink]="link.path"
-          routerLinkActive="active-link"
-          (click)="mobileMenuOpen.set(false)"
-          >{{ link.label }}</a
-        >
-      }
       <button matButton="text" (click)="logout(); mobileMenuOpen.set(false)">Salir</button>
     }
   </nav>

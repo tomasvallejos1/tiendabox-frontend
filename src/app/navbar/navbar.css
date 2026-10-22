@@ -66,7 +66,8 @@
 /* ===== Acciones siempre accesibles en la barra ===== */
 
 .navbar-toggle,
-.navbar-cart {
+.navbar-cart,
+.navbar-owner-action {
   flex: 0 0 auto;
   min-width: 48px;
   min-height: 48px;
@@ -112,7 +113,8 @@
     display: flex;
   }
 
-  .navbar-toggle {
+  .navbar-toggle,
+  .navbar-owner-action {
     display: none;
   }
 

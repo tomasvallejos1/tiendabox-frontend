@@ -82,8 +82,30 @@ describe('Navbar', () => {
     role.set(currentRole);
     setItemCount(5);
     await fixture.whenStable();
-    await openMenu();
+    if (fixture.nativeElement.querySelector('.navbar-toggle')) await openMenu();
     expect(fixture.nativeElement.querySelector('a[href="/carrito"]')).toBeNull();
+  });
+
+  it('muestra al owner solo accesos de cuenta, sin duplicar las secciones del panel', async () => {
+    role.set('owner');
+    await fixture.whenStable();
+    const root: HTMLElement = fixture.nativeElement;
+    expect(root.querySelector('.navbar-toggle')).toBeNull();
+    expect(root.querySelector('.navbar-mobile-menu')).toBeNull();
+    expect(root.querySelector('a[href^="/admin/"]')).toBeNull();
+
+    const actions = root.querySelectorAll<HTMLElement>('.navbar-owner-action');
+    expect(Array.from(actions, (action) => action.getAttribute('aria-label'))).toEqual([
+      'Panel de administración',
+      'Salir',
+    ]);
+    expect(actions[0].getAttribute('href')).toBe('/admin');
+    expect(actions[0].querySelector('mat-icon')?.textContent).toContain('admin_panel_settings');
+    expect(actions[1].querySelector('mat-icon')?.textContent).toContain('logout');
+
+    actions[1].click();
+    await fixture.whenStable();
+    expect(auth.logout).toHaveBeenCalledOnce();
   });
 
   it('mantiene el badge visible con cero y actualiza la cantidad desde CartService', async () => {
@@ -115,10 +137,6 @@ describe('Navbar', () => {
   it.each([
     { currentRole: null, labels: ['Catálogo', 'Ingresar', 'Crear cuenta'] },
     { currentRole: 'cliente', labels: ['Catálogo', 'Mis pedidos', 'Mi perfil', 'Salir'] },
-    {
-      currentRole: 'owner',
-      labels: ['Catálogo', 'Productos', 'Categorías', 'Marcas', 'Pedidos', 'Clientes', 'Salir'],
-    },
   ])(
     'muestra todas las opciones de $currentRole y cierra al elegir cada una',
     async ({ currentRole, labels }) => {

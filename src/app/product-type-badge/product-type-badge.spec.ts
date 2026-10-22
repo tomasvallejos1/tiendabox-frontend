@@ -19,9 +19,9 @@ describe('ProductTypeBadge', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
-  it('should show "En stock" for stock products', async () => {
+  it('should show "Retiro inmediato" for stock products', async () => {
     const el = await render('stock');
-    expect(el.querySelector('mat-chip')?.textContent).toContain('En stock');
+    expect(el.querySelector('mat-chip')?.textContent).toContain('Retiro inmediato');
   });
 
   it('should show "Por encargo" for encargo products', async () => {
