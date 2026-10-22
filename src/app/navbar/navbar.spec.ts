@@ -61,6 +61,18 @@ describe('Navbar', () => {
     });
   }
 
+  it('muestra el logo de TiendaBox enlazando al catálogo', () => {
+    const brand: HTMLAnchorElement | null = fixture.nativeElement.querySelector('.navbar-brand');
+    const logo: HTMLImageElement | null = fixture.nativeElement.querySelector(
+      '.navbar-brand .navbar-logo',
+    );
+    expect(brand).not.toBeNull();
+    expect(brand?.getAttribute('href')).toBe('/productos');
+    expect(logo).not.toBeNull();
+    expect(logo?.getAttribute('src')).toBe('logo.png');
+    expect(logo?.getAttribute('alt')).toBe('TiendaBox');
+  });
+
   it('muestra un único carrito para el cliente, en la barra y fuera del menú', async () => {
     role.set('cliente');
     await fixture.whenStable();

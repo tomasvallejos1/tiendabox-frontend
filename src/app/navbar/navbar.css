@@ -8,11 +8,24 @@
 }
 
 .navbar {
-  background: var(--mat-sys-surface);
-  color: var(--mat-sys-on-surface);
-  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  --mat-toolbar-container-background-color: #000000;
+  --mat-toolbar-container-text-color: #ffffff;
+  --mat-icon-color: #ffffff;
+  --mat-icon-button-icon-color: #ffffff;
+  --mat-icon-button-state-layer-color: #ffffff;
+  --mat-icon-button-ripple-color: rgba(255, 255, 255, 0.2);
+  --mat-button-text-label-text-color: #ffffff;
+  --mat-button-text-state-layer-color: #ffffff;
+  --mat-button-text-ripple-color: rgba(255, 255, 255, 0.2);
+  background: #000000;
+  color: #ffffff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   padding: 0;
   height: var(--navbar-height);
+}
+
+.navbar mat-icon {
+  color: #ffffff;
 }
 
 .navbar-content {
@@ -29,17 +42,22 @@
 /* ===== Brand / Logo ===== */
 
 .navbar-brand {
+  display: inline-flex;
+  align-items: center;
   margin-right: auto;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--mat-sys-primary);
+  color: #ffffff;
   text-decoration: none;
-  letter-spacing: -0.5px;
   white-space: nowrap;
 }
 
 .navbar-brand:hover {
   opacity: 0.85;
+}
+
+.navbar-logo {
+  display: block;
+  height: 24px;
+  width: auto;
 }
 
 /* ===== Spacer (empuja elementos a la derecha) ===== */
@@ -60,7 +78,8 @@
 /* ===== Link activo ===== */
 
 .active-link {
-  color: var(--mat-sys-primary) !important;
+  color: #ffffff !important;
+  background-color: rgba(255, 255, 255, 0.12);
 }
 
 /* ===== Acciones siempre accesibles en la barra ===== */
@@ -71,11 +90,15 @@
   flex: 0 0 auto;
   min-width: 48px;
   min-height: 48px;
+  color: #ffffff;
 }
 
 /* ===== Menú móvil ===== */
 
 .navbar-mobile-menu {
+  --mat-button-text-label-text-color: #ffffff;
+  --mat-button-text-state-layer-color: #ffffff;
+  --mat-button-text-ripple-color: rgba(255, 255, 255, 0.2);
   position: absolute;
   top: 100%;
   inset-inline: 0;
@@ -88,7 +111,8 @@
   max-height: calc(100dvh - var(--navbar-height) - 16px);
   overflow-y: auto;
   overscroll-behavior-y: contain;
-  background: var(--mat-sys-surface);
+  background: #000000;
+  color: #ffffff;
   box-shadow: var(--mat-sys-level2);
 }
 
@@ -103,6 +127,10 @@
 @media (min-width: 600px) {
   :host {
     --navbar-height: var(--mat-toolbar-standard-height, 64px);
+  }
+
+  .navbar-logo {
+    height: 28px;
   }
 }
 

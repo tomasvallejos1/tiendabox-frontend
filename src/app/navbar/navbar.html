@@ -1,9 +1,14 @@
 <mat-toolbar class="navbar">
   <div class="navbar-content">
     <!-- Logo / Nombre del sitio -->
-    <a class="navbar-brand" routerLink="/productos" (click)="mobileMenuOpen.set(false)"
-      >TiendaBox</a
+    <a
+      class="navbar-brand"
+      routerLink="/productos"
+      aria-label="TiendaBox"
+      (click)="mobileMenuOpen.set(false)"
     >
+      <img class="navbar-logo" src="logo.png" alt="TiendaBox" />
+    </a>
 
     <!-- Links de escritorio -->
     <div class="navbar-links">
