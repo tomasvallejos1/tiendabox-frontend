@@ -101,6 +101,18 @@ describe('ProductList', () => {
     http.expectNone(environment.apiUrl + '/products');
   });
 
+  it('hides sold-out stock products when only available is on, keeping encargos', async () => {
+    const fixture = await render([stock, soldOut, custom]);
+    const component = fixture.componentInstance;
+    component['onlyAvailable'].set(true);
+    expect(component['visibleProducts']().map((p) => p.id)).toEqual(['stock', 'custom']);
+    expect(component['hasFilters']()).toBe(true);
+    component.clearFilters();
+    expect(component['onlyAvailable']()).toBe(false);
+    expect(component['visibleProducts']()).toHaveLength(3);
+    http.expectNone(environment.apiUrl + '/products');
+  });
+
   it('preserves category API filters and removable chips', async () => {
     const fixture = await render();
     fixture.componentInstance.onCategoryChange('cat');

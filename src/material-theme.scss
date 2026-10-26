@@ -10,13 +10,37 @@ html {
   @include mat.theme(
     (
       color: (
-        primary: mat.$magenta-palette,
-        tertiary: mat.$violet-palette,
+        primary: mat.$azure-palette,
       ),
       typography: Roboto,
       density: 0,
     )
   );
+
+  // Marca monocromática (logo blanco sobre negro): se sobrescriben los roles
+  // de color de Material con negro, blanco y grises neutros.
+  --mat-sys-primary: #000000;
+  --mat-sys-on-primary: #ffffff;
+  --mat-sys-primary-container: #e5e5e5;
+  --mat-sys-on-primary-container: #000000;
+  --mat-sys-secondary: #262626;
+  --mat-sys-on-secondary: #ffffff;
+  --mat-sys-secondary-container: #e5e5e5;
+  --mat-sys-on-secondary-container: #000000;
+  --mat-sys-tertiary: #404040;
+  --mat-sys-on-tertiary: #ffffff;
+  --mat-sys-tertiary-container: #ebebeb;
+  --mat-sys-on-tertiary-container: #000000;
+  --mat-sys-surface: #fafafa;
+  --mat-sys-surface-container-lowest: #ffffff;
+  --mat-sys-surface-container-low: #f5f5f5;
+  --mat-sys-surface-container: #f0f0f0;
+  --mat-sys-surface-container-high: #ebebeb;
+  --mat-sys-surface-container-highest: #e5e5e5;
+  --mat-sys-surface-variant: #e5e5e5;
+  --mat-sys-on-surface-variant: #404040;
+  --mat-sys-outline: #737373;
+  --mat-sys-outline-variant: #d4d4d4;
 }
 
 body {

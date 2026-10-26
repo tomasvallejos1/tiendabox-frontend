@@ -17,6 +17,12 @@
   --mat-button-text-label-text-color: #ffffff;
   --mat-button-text-state-layer-color: #ffffff;
   --mat-button-text-ripple-color: rgba(255, 255, 255, 0.2);
+  --mat-button-tonal-container-color: #262626;
+  --mat-button-tonal-label-text-color: #ffffff;
+  --mat-button-tonal-state-layer-color: #ffffff;
+  --mat-button-filled-container-color: #ffffff;
+  --mat-button-filled-label-text-color: #000000;
+  --mat-button-filled-state-layer-color: #000000;
   background: #000000;
   color: #ffffff;
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
@@ -44,6 +50,8 @@
 .navbar-brand {
   display: inline-flex;
   align-items: center;
+  align-self: stretch;
+  line-height: 0;
   margin-right: auto;
   color: #ffffff;
   text-decoration: none;
@@ -58,6 +66,9 @@
   display: block;
   height: 24px;
   width: auto;
+  /* El texto del PNG (filas 39-142 de 143) queda más abajo que el centro de la
+     imagen; se sube ~13% para alinearlo con el resto de elementos. */
+  transform: translateY(-13%);
 }
 
 /* ===== Spacer (empuja elementos a la derecha) ===== */
@@ -91,6 +102,17 @@
   min-width: 48px;
   min-height: 48px;
   color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.navbar-toggle mat-icon,
+.navbar-cart mat-icon,
+.navbar-owner-action mat-icon {
+  display: block;
+  margin: 0;
 }
 
 /* ===== Menú móvil ===== */
@@ -99,6 +121,12 @@
   --mat-button-text-label-text-color: #ffffff;
   --mat-button-text-state-layer-color: #ffffff;
   --mat-button-text-ripple-color: rgba(255, 255, 255, 0.2);
+  --mat-button-tonal-container-color: #262626;
+  --mat-button-tonal-label-text-color: #ffffff;
+  --mat-button-tonal-state-layer-color: #ffffff;
+  --mat-button-filled-container-color: #ffffff;
+  --mat-button-filled-label-text-color: #000000;
+  --mat-button-filled-state-layer-color: #000000;
   position: absolute;
   top: 100%;
   inset-inline: 0;
@@ -118,10 +146,21 @@
 
 .navbar-mobile-menu a,
 .navbar-mobile-menu button {
-  justify-content: flex-start;
+  justify-content: center;
   width: 100%;
-  min-height: 44px;
+  min-height: 48px;
+  padding: 0 24px;
   flex-shrink: 0;
+}
+
+/* Enlaces de texto: pastilla con borde, igual de ancha que las de acción. */
+.navbar-mobile-menu a[matButton='text'],
+.navbar-mobile-menu button[matButton='text'] {
+  border: 1px solid rgba(255, 255, 255, 0.24);
+}
+
+.navbar-mobile-menu .active-link {
+  border-color: #ffffff;
 }
 
 @media (min-width: 600px) {

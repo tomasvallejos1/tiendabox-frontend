@@ -35,6 +35,10 @@ mat-form-field {
   width: 100%;
   min-width: 0;
 }
+.available-toggle {
+  align-self: center;
+  justify-self: start;
+}
 .product-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 140px), 1fr));
@@ -200,6 +204,6 @@ h2 {
   .filters,
   .filters.open {
     display: grid;
-    grid-template-columns: 1.3fr 1fr 1fr 1.2fr;
+    grid-template-columns: 1.3fr 1fr 1fr 1.2fr auto;
   }
 }

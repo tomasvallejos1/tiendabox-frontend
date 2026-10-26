@@ -10,6 +10,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatInputModule } from '@angular/material/input';
 import { ProductTypeBadge } from '../product-type-badge/product-type-badge';
 import { MatSelectModule } from '@angular/material/select';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { finalize, forkJoin, timeout } from 'rxjs';
 
@@ -36,6 +37,7 @@ import { CartService } from '../shared/cart-service';
     MatInputModule,
     ProductTypeBadge,
     MatSelectModule,
+    MatSlideToggleModule,
     MatSnackBarModule,
   ],
   templateUrl: './product-list.html',
@@ -52,15 +54,25 @@ export class ProductList implements OnInit {
   protected selectedBrandId = signal<string | null>(null);
   protected readonly search = signal('');
   protected readonly sort = signal('recent');
+  protected readonly onlyAvailable = signal(false);
   protected readonly filtersOpen = signal(false);
   protected readonly skeletons = [1, 2, 3, 4, 5, 6];
   protected readonly hasFilters = computed(
-    () => !!(this.search().trim() || this.selectedCategoryId() || this.selectedBrandId()),
+    () =>
+      !!(
+        this.search().trim() ||
+        this.selectedCategoryId() ||
+        this.selectedBrandId() ||
+        this.onlyAvailable()
+      ),
   );
   protected readonly visibleProducts = computed(() => {
     const query = this.search().trim().toLocaleLowerCase();
-    const products = this.products().filter((product) =>
-      product.name.toLocaleLowerCase().includes(query),
+    const onlyAvailable = this.onlyAvailable();
+    const products = this.products().filter(
+      (product) =>
+        product.name.toLocaleLowerCase().includes(query) &&
+        (!onlyAvailable || product.type !== 'stock' || product.stock > 0),
     );
     if (this.sort() === 'name') return products.sort((a, b) => a.name.localeCompare(b.name, 'es'));
     if (this.sort() === 'price-asc' || this.sort() === 'price-desc') {
@@ -140,6 +152,7 @@ export class ProductList implements OnInit {
     this.search.set('');
     this.selectedCategoryId.set(null);
     this.selectedBrandId.set(null);
+    this.onlyAvailable.set(false);
     if (hadApiFilters) this.loadProducts();
   }
 

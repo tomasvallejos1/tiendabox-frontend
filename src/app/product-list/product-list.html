@@ -28,6 +28,14 @@
             <button matChipRemove aria-label="Quitar marca"><mat-icon>cancel</mat-icon></button>
           </mat-chip>
         }
+        @if (onlyAvailable()) {
+          <mat-chip (removed)="onlyAvailable.set(false)"
+            >Solo disponibles
+            <button matChipRemove aria-label="Quitar filtro de disponibles">
+              <mat-icon>cancel</mat-icon>
+            </button>
+          </mat-chip>
+        }
       </mat-chip-set>
     }
   </header>
@@ -73,6 +81,12 @@
         <mat-option value="price-desc">Precio mayor a menor</mat-option>
       </mat-select>
     </mat-form-field>
+    <mat-slide-toggle
+      class="available-toggle"
+      [checked]="onlyAvailable()"
+      (change)="onlyAvailable.set($event.checked)"
+      >Solo disponibles</mat-slide-toggle
+    >
   </div>
   @if (loading()) {
     <div class="product-grid" role="status" aria-label="Cargando productos" aria-busy="true">
