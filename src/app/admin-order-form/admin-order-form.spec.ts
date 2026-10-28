@@ -25,7 +25,7 @@ describe('AdminOrderForm', () => {
     address: 'San Martín 123',
     government_id: null,
     tax_status: 'consumidor_final',
-    phone: null,
+    phone: '1155551234',
     created_at: '2026-10-09T12:00:00Z',
   };
   const stock: Product = {
@@ -55,6 +55,7 @@ describe('AdminOrderForm', () => {
     name: 'Juan Local',
     email: null,
     address: null,
+    phone: null,
   };
 
   beforeEach(async () => {
@@ -268,6 +269,56 @@ describe('AdminOrderForm', () => {
     expect(TestBed.inject(Router).navigate).not.toHaveBeenCalled();
     submit();
     http.expectOne(`${environment.apiUrl}/order`).flush({ id: 'retry-order' });
+  });
+
+  it.each(['encargo', 'mixto'])(
+    'bloquea un pedido %s para un cliente sin teléfono y enlaza su edición',
+    async (kind) => {
+      const customerControl = fixture.componentInstance['form'].controls.customer;
+      customerControl.setValue(localCustomer);
+      fixture.componentInstance['form'].controls.delivery_type.setValue('retiro');
+      if (kind === 'mixto') await addProduct(stock.name);
+      await addProduct(encargo.name);
+
+      expect(saveButton().disabled).toBe(true);
+      expect(fixture.nativeElement.textContent).toContain(
+        'El cliente no tiene teléfono cargado. Los productos por encargo se cotizan por WhatsApp: cargalo desde Clientes antes de crear el pedido.',
+      );
+      expect(
+        fixture.nativeElement.querySelector(`a[href="/admin/clientes/${localCustomer.id}/edit"]`),
+      ).toBeTruthy();
+      submit();
+      http.expectNone(`${environment.apiUrl}/order`);
+
+      customerControl.setValue(customer);
+      await fixture.whenStable();
+      expect(saveButton().disabled).toBe(false);
+      expect(
+        fixture.nativeElement.querySelector(`a[href="/admin/clientes/${localCustomer.id}/edit"]`),
+      ).toBeNull();
+      customerControl.setValue(localCustomer);
+      fixture.componentInstance['removeItem'](encargo.id);
+      await fixture.whenStable();
+      expect(saveButton().disabled).toBe(false);
+    },
+  );
+
+  it('crea un pedido de solo stock aunque el cliente no tenga teléfono', async () => {
+    fixture.componentInstance['form'].controls.customer.setValue(localCustomer);
+    fixture.componentInstance['form'].controls.delivery_type.setValue('retiro');
+    await addProduct(stock.name);
+    expect(saveButton().disabled).toBe(false);
+    saveButton().click();
+    const request = http.expectOne(`${environment.apiUrl}/order`);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({
+      customer_id: localCustomer.id,
+      delivery_type: 'retiro',
+      items: [{ product_id: stock.id, quantity: 1 }],
+    });
+    request.flush({ id: 'stock-order' });
+    await fixture.whenStable();
+    expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/admin/pedidos']);
   });
 
   it('excluye productos inactivos y mantiene clientes sin email', async () => {

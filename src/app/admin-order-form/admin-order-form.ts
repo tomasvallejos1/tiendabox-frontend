@@ -99,7 +99,19 @@ export class AdminOrderForm implements OnInit {
   protected readonly hasEncargoItems = computed(() =>
     this.items().some((item) => item.product.type === 'encargo'),
   );
+  protected readonly customerNeedingPhone = computed(() => {
+    const customer = this.customerValue();
+    return this.hasEncargoItems() &&
+      customer &&
+      typeof customer !== 'string' &&
+      !customer.phone?.trim()
+      ? customer
+      : null;
+  });
   protected readonly blockReason = computed(() => {
+    if (this.customerNeedingPhone()) {
+      return 'El cliente no tiene teléfono cargado. Los productos por encargo se cotizan por WhatsApp: cargalo desde Clientes antes de crear el pedido.';
+    }
     if (this.items().some((item) => item.quantity.hasError('max'))) {
       return 'Ajustá las cantidades que superan el stock';
     }

@@ -157,11 +157,139 @@ describe('CartPage', () => {
     http.expectNone(`${environment.apiUrl}/order`);
   });
 
-  it('permite cotizar con perfil incompleto y mantiene sus campos editables', async () => {
-    await load([encargo], { ...customer, phone: null, government_id: null });
-    expect(fixture.nativeElement.querySelector('.profile-card')).toBeTruthy();
+  it.each(['stock', 'mixto', 'encargo'])(
+    'exige guardar el teléfono para confirmar un carrito %s sin exigir los datos opcionales',
+    async (kind) => {
+      const items = kind === 'stock' ? [stock] : kind === 'encargo' ? [encargo] : [stock, encargo];
+      const profile = { ...customer, phone: null, name: '', government_id: null, tax_status: '' };
+      await load(items, profile);
+      fixture.componentInstance['form'].controls.delivery_type.setValue('retiro');
+      await fixture.whenStable();
+
+      expect(button().disabled).toBe(true);
+      expect(fixture.nativeElement.querySelector('.block-reason').textContent).toContain(
+        'Cargá tu teléfono para que podamos contactarte por tu pedido',
+      );
+      const profileCard: HTMLElement = fixture.nativeElement.querySelector('.profile-card');
+      expect(profileCard.textContent).toContain(
+        'Te vamos a escribir por WhatsApp para coordinar el retiro, el envío o la cotización',
+      );
+      expect(profileCard.textContent).toContain('Nombre (opcional)');
+      expect(profileCard.textContent).toContain('Documento (opcional)');
+      expect(profileCard.textContent).toContain('Condición fiscal (opcional)');
+      const phone = profileCard.querySelector('input')!;
+      expect(phone.getAttribute('formControlName')).toBe('phone');
+      expect(phone.required).toBe(true);
+      fixture.componentInstance['confirmOrder']();
+      http.expectNone(`${environment.apiUrl}/order`);
+
+      phone.value = '1155551234';
+      phone.dispatchEvent(new Event('input'));
+      fixture.componentInstance['profileForm'].controls.tax_status.setValue('');
+      profileCard
+        .querySelector('form')!
+        .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      const request = http.expectOne(`${environment.apiUrl}/customer/${customer.id}`);
+      expect(request.request.method).toBe('PUT');
+      expect(request.request.body.phone).toBe('1155551234');
+      expect(request.request.body.government_id).toBeNull();
+      expect(request.request.body).not.toHaveProperty('name');
+      expect(request.request.body).not.toHaveProperty('tax_status');
+      expect(button().disabled).toBe(true);
+      request.flush({ ...profile, phone: '1155551234' });
+      await fixture.whenStable();
+
+      expect(button().disabled).toBe(false);
+      expect(fixture.nativeElement.querySelector('.profile-card')).toBeNull();
+      expect(fixture.componentInstance['missingOptional']()).toEqual([
+        'name',
+        'government_id',
+        'tax_status',
+      ]);
+    },
+  );
+
+  it('prioriza el teléfono sobre el stock y rechaza un teléfono con solo espacios', async () => {
+    await load([{ ...stock, exceeds_stock: true }], { ...customer, phone: '   ' });
+    expect(fixture.nativeElement.querySelector('.block-reason').textContent).toContain(
+      'Cargá tu teléfono para que podamos contactarte por tu pedido',
+    );
+    fixture.componentInstance['saveProfile']();
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('.profile-card').textContent).toContain(
+      'El teléfono es obligatorio',
+    );
+    http.expectNone(`${environment.apiUrl}/customer/${customer.id}`);
+    http.expectNone(`${environment.apiUrl}/order`);
+  });
+
+  it('permite confirmar con teléfono sin documento ni condición fiscal y muestra errores reales del backend', async () => {
+    await load([stock], { ...customer, government_id: null, tax_status: '' });
+    expect(fixture.nativeElement.querySelector('.profile-card')).toBeNull();
     expect(button().disabled).toBe(false);
-    expect(fixture.componentInstance['profileComplete']()).toBe(false);
+    fixture.componentInstance['form'].controls.delivery_type.setValue('retiro');
+    await fixture.whenStable();
+    button().click();
+    http
+      .expectOne(`${environment.apiUrl}/order`)
+      .flush(
+        { error: 'El teléfono es obligatorio para crear pedidos' },
+        { status: 400, statusText: 'Bad Request' },
+      );
+    await fixture.whenStable();
+    expect(
+      fixture.nativeElement.querySelector('.checkout-card .error-message').textContent,
+    ).toContain('El teléfono es obligatorio para crear pedidos');
+    expect(button().disabled).toBe(false);
+  });
+
+  it('valida el documento opcional según la condición fiscal y conserva el teléfono al cambiar la entrega', async () => {
+    await load([stock], { ...customer, phone: null, government_id: null });
+    const form = fixture.componentInstance['profileForm'];
+    form.controls.phone.setValue('1155551234');
+    const document = form.controls.government_id;
+    for (const valid of ['', '5123456', '30123456', '20301234561']) {
+      document.setValue(valid);
+      expect(document.valid).toBe(true);
+    }
+    document.setValue('301234567');
+    expect(document.hasError('pattern')).toBe(true);
+    document.setValue('30123456');
+    document.markAsTouched();
+    form.controls.tax_status.setValue('monotributo');
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('.profile-card').textContent).toContain(
+      'El CUIT debe tener 11 dígitos numéricos',
+    );
+    document.setValue('20301234561');
+    expect(document.valid).toBe(true);
+    document.setValue('');
+    expect(document.valid).toBe(true);
+    fixture.componentInstance['form'].controls.delivery_type.setValue('envio');
+    expect(form.controls.phone.value).toBe('1155551234');
+    expect(form.controls.tax_status.value).toBe('monotributo');
+    http.expectNone(`${environment.apiUrl}/order`);
+  });
+
+  it('exige dirección solo para envío y permite completarla en los datos de entrega', async () => {
+    await load([stock], { ...customer, address: null, government_id: null });
+    const form = fixture.componentInstance['form'];
+    expect(button().disabled).toBe(false);
+    form.controls.delivery_type.setValue('envio');
+    await fixture.whenStable();
+    expect(button().disabled).toBe(true);
+    expect(fixture.componentInstance['missingRequired']()).toEqual(['address']);
+    expect(fixture.nativeElement.textContent).toContain('La dirección es obligatoria');
+    form.controls.delivery_type.setValue('retiro');
+    await fixture.whenStable();
+    expect(button().disabled).toBe(false);
+    expect(fixture.nativeElement.querySelector('.profile-card')).toBeNull();
+    form.controls.delivery_type.setValue('envio');
+    form.controls.delivery_address.setValue('Otra dirección 456');
+    await fixture.whenStable();
+    expect(button().disabled).toBe(false);
+    expect(fixture.nativeElement.querySelector('.profile-card')).toBeNull();
+    http.expectNone(`${environment.apiUrl}/customer/${customer.id}`);
   });
 
   it.each([
@@ -171,7 +299,8 @@ describe('CartPage', () => {
     },
     { body: null, expected: 'No se pudieron guardar tus datos. Intentá de nuevo.' },
   ])('muestra el error al guardar los datos del perfil: $expected', async ({ body, expected }) => {
-    await load([encargo], { ...customer, government_id: null });
+    await load([encargo], { ...customer, phone: null, government_id: null });
+    fixture.componentInstance['profileForm'].controls.phone.setValue('1155551234');
     fixture.componentInstance['profileForm'].controls.government_id.setValue('20123456789');
     fixture.nativeElement
       .querySelector('.profile-card form')
@@ -202,6 +331,7 @@ describe('CartPage', () => {
     expect(fixture.nativeElement.textContent).toContain('La dirección es obligatoria');
     http.expectNone(`${environment.apiUrl}/order`);
     form.controls.delivery_address.setValue('Otra dirección 456');
+    await fixture.whenStable();
     button().click();
     http
       .expectOne(`${environment.apiUrl}/order`)

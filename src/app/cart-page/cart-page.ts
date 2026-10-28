@@ -19,7 +19,7 @@ import { apiErrorMessage } from '../shared/api-error';
 import { AuthService } from '../shared/auth-service';
 import { Cart, CartItem } from '../shared/cart';
 import { CartService } from '../shared/cart-service';
-import { Customer, TaxStatus } from '../shared/customer';
+import { Customer, governmentIdRule, TaxStatus } from '../shared/customer';
 import { CustomerService } from '../shared/customer-service';
 import { OrderService } from '../shared/order-service';
 import { hasPrice, summarizeOrderItems } from '../shared/order-summary';
@@ -60,12 +60,13 @@ export class CartPage implements OnInit {
 
   // Formulario de datos faltantes del perfil.
   protected readonly profileForm = this.fb.nonNullable.group({
-    name: ['', [Validators.required, Validators.pattern(/\S/)]],
-    government_id: ['', [Validators.required, Validators.pattern(/^\d{11}$/)]],
-    tax_status: ['consumidor_final' as string, Validators.required],
-    phone: ['', Validators.required],
+    name: ['', Validators.pattern(/\S/)],
+    government_id: [''],
+    tax_status: ['consumidor_final' as string],
+    phone: [''],
     address: [''],
   });
+  protected readonly documentRule = signal(governmentIdRule('consumidor_final'));
 
   protected readonly taxStatusOptions: { value: TaxStatus; label: string }[] = [
     { value: 'consumidor_final', label: 'Consumidor final' },
@@ -88,13 +89,13 @@ export class CartPage implements OnInit {
 
   // Estado del perfil del cliente.
   protected readonly customer = signal<Customer | null>(null);
-  protected readonly profileComplete = signal(false);
   protected readonly profileSaving = signal(false);
   protected readonly profileSaved = signal(false);
   protected readonly profileError = signal<string | null>(null);
 
   // Campos faltantes del perfil (para mostrar solo los que falten).
-  protected readonly missingFields = signal<string[]>([]);
+  protected readonly missingRequired = signal<string[]>([]);
+  protected readonly missingOptional = signal<string[]>([]);
 
   private customerId: string | null = null;
 
@@ -112,6 +113,11 @@ export class CartPage implements OnInit {
   ngOnInit(): void {
     this.customerId = this.authService.getCustomerId();
 
+    this.applyGovernmentIdRule(this.profileForm.controls.tax_status.value);
+    this.profileForm.controls.tax_status.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((taxStatus) => this.applyGovernmentIdRule(taxStatus));
+
     // Suscripción a cambios del delivery_type para validación condicional de la dirección.
     this.form.controls.delivery_type.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -122,11 +128,15 @@ export class CartPage implements OnInit {
         } else {
           addressControl.clearValidators();
         }
-        addressControl.updateValueAndValidity();
+        addressControl.updateValueAndValidity({ emitEvent: false });
 
         // Reevaluar si address es campo faltante del perfil según tipo de entrega.
         this.evaluateProfileCompleteness();
       });
+
+    this.form.controls.delivery_address.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.evaluateProfileCompleteness());
 
     this.loadCart();
   }
@@ -155,6 +165,13 @@ export class CartPage implements OnInit {
     this.customerService.getCustomer(this.customerId).subscribe({
       next: (customer) => {
         this.customer.set(customer);
+        this.profileForm.patchValue({
+          name: customer.name || '',
+          government_id: customer.government_id ?? '',
+          tax_status: customer.tax_status || 'consumidor_final',
+          phone: customer.phone ?? '',
+          address: customer.address ?? '',
+        });
         if (customer.address) {
           this.form.controls.delivery_address.setValue(customer.address);
         }
@@ -163,59 +180,54 @@ export class CartPage implements OnInit {
     });
   }
 
-  /** Evalúa si el perfil del cliente tiene todos los campos requeridos. */
+  /** Separa los datos necesarios para el pedido de los datos opcionales del perfil. */
   private evaluateProfileCompleteness(): void {
     const c = this.customer();
-    if (!c) {
-      this.profileComplete.set(false);
-      return;
-    }
+    if (!c) return;
 
-    const missing: string[] = [];
-    if (!c.name) missing.push('name');
-    if (!c.phone) missing.push('phone');
-    if (!c.government_id) missing.push('government_id');
-    if (!c.tax_status) missing.push('tax_status');
+    const required: string[] = [];
+    const optional: string[] = [];
+    if (!c.phone?.trim()) required.push('phone');
+    if (!c.name?.trim()) optional.push('name');
+    if (!c.government_id?.trim()) optional.push('government_id');
+    if (!c.tax_status?.trim()) optional.push('tax_status');
 
-    // address se exige SOLO si el pedido es con envío a domicilio.
+    // La dirección puede completarse en el formulario de entrega sin editar el perfil.
     const isEnvio = this.form.controls.delivery_type.value === 'envio';
-    if (isEnvio && !c.address) missing.push('address');
+    if (isEnvio && !this.form.controls.delivery_address.value.trim()) required.push('address');
 
-    this.missingFields.set(missing);
-    this.profileComplete.set(missing.length === 0);
+    this.missingRequired.set(required);
+    this.missingOptional.set(optional);
 
-    // Precargar el profileForm con los valores actuales del cliente para los campos faltantes.
-    if (missing.length > 0) {
-      this.profileSaved.set(false);
-      // Poner valores del cliente en los campos que ya tiene.
-      this.profileForm.patchValue({
-        name: c.name || '',
-        government_id: c.government_id ?? '',
-        tax_status: c.tax_status || 'consumidor_final',
-        phone: c.phone ?? '',
-        address: c.address ?? '',
-      });
+    if (required.length > 0) this.profileSaved.set(false);
 
-      // Configurar validators de address según si es envío.
-      const addressControl = this.profileForm.controls.address;
-      if (isEnvio) {
-        addressControl.setValidators(Validators.required);
-      } else {
-        addressControl.clearValidators();
-      }
-      addressControl.updateValueAndValidity();
+    for (const field of ['phone', 'address'] as const) {
+      const control = this.profileForm.controls[field];
+      control.setValidators(
+        required.includes(field) ? [Validators.required, Validators.pattern(/\S/)] : [],
+      );
+      control.updateValueAndValidity();
     }
+  }
+
+  private applyGovernmentIdRule(taxStatus: string): void {
+    const rule = governmentIdRule(taxStatus);
+    this.documentRule.set(rule);
+    const control = this.profileForm.controls.government_id;
+    control.setValidators(Validators.pattern(rule.pattern));
+    control.updateValueAndValidity();
   }
 
   /** Comprueba si un campo específico falta en el perfil. */
   protected isMissing(field: string): boolean {
-    return this.missingFields().includes(field);
+    return this.missingRequired().includes(field) || this.missingOptional().includes(field);
   }
 
-  /** Indica si la confirmación debe bloquearse por problemas en los ítems. */
+  /** Bloquea por datos requeridos o problemas de disponibilidad en productos de stock. */
   protected get confirmBlocked(): boolean {
     const c = this.cart();
     if (!c || c.items.length === 0) return true;
+    if (!this.customer() || this.missingRequired().length > 0) return true;
     return c.items.some(
       (item) =>
         item.type === 'stock' &&
@@ -227,6 +239,9 @@ export class CartPage implements OnInit {
 
   /** Mensaje explicativo de por qué está bloqueado el botón de confirmar. */
   protected get blockReason(): string | null {
+    if (this.missingRequired().includes('phone')) {
+      return 'Cargá tu teléfono para que podamos contactarte por tu pedido';
+    }
     const c = this.cart();
     if (!c) return null;
     if (c.items.some((item) => item.type === 'stock' && !item.available)) {
@@ -234,6 +249,9 @@ export class CartPage implements OnInit {
     }
     if (c.items.some((item) => this.exceedsStock(item))) {
       return 'Ajustá las cantidades que superan el stock';
+    }
+    if (this.missingRequired().includes('address')) {
+      return 'La dirección es obligatoria para envío a domicilio';
     }
     return null;
   }
@@ -259,10 +277,10 @@ export class CartPage implements OnInit {
     const value = this.profileForm.getRawValue();
     this.customerService
       .updateCustomer(this.customerId, {
-        name: value.name,
+        ...(value.name.trim() ? { name: value.name.trim() } : {}),
         government_id: value.government_id || null,
-        tax_status: value.tax_status,
-        phone: value.phone || null,
+        ...(value.tax_status ? { tax_status: value.tax_status } : {}),
+        phone: value.phone.trim() || null,
         address: value.address || null,
       })
       .subscribe({

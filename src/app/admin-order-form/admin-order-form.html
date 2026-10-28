@@ -152,7 +152,12 @@
           </p>
         }
         @if (blockReason()) {
-          <p class="field-error" role="alert">{{ blockReason() }}</p>
+          <p class="field-error" role="alert">
+            {{ blockReason() }}
+            @if (customerNeedingPhone(); as customer) {
+              <a [routerLink]="['/admin/clientes', customer.id, 'edit']">Editar cliente</a>
+            }
+          </p>
         }
       </mat-card-content>
     </mat-card>
