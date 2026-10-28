@@ -39,6 +39,10 @@ export class CartService {
     return this.http.delete<Cart>(`${this.apiUrl}/items/${productId}`);
   }
 
+  updateItem(productId: string, quantity: number): Observable<Cart> {
+    return this.http.put<Cart>(`${this.apiUrl}/items/${productId}`, { quantity });
+  }
+
   clear(): Observable<void> {
     return this.http.delete<void>(this.apiUrl);
   }

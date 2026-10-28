@@ -2,6 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { provideRouter } from '@angular/router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -9,6 +10,7 @@ import { environment } from '../../environments/environment';
 import { OrderConfirmationDialog } from '../order-confirmation-dialog/order-confirmation-dialog';
 import { AuthService } from '../shared/auth-service';
 import { Cart, CartItem } from '../shared/cart';
+import { CartService } from '../shared/cart-service';
 import { Customer } from '../shared/customer';
 import { CartPage } from './cart-page';
 
@@ -69,19 +71,25 @@ describe('CartPage', () => {
     vi.restoreAllMocks();
   });
 
-  async function load(items: CartItem[], profile = customer): Promise<void> {
-    const cart: Cart = {
+  function cartResponse(items: CartItem[]): Cart {
+    return {
       id: 'cart-1',
       customer_id: customer.id,
       updated_at: '2026-10-09T12:00:00Z',
       items,
       item_count: items.reduce((count, item) => count + item.quantity, 0),
-      total: items.some((item) => item.type === 'stock') ? 1200 : 0,
+      total: items.reduce(
+        (total, item) => total + (item.type === 'stock' ? (item.subtotal ?? 0) : 0),
+        0,
+      ),
       has_encargo_items: items.some((item) => item.type === 'encargo'),
       has_unavailable_items: items.some((item) => !item.available),
     };
+  }
+
+  async function load(items: CartItem[], profile = customer): Promise<void> {
     fixture.detectChanges();
-    http.expectOne(`${environment.apiUrl}/cart`).flush(cart);
+    http.expectOne(`${environment.apiUrl}/cart`).flush(cartResponse(items));
     http.expectOne(`${environment.apiUrl}/customer/${customer.id}`).flush(profile);
     await fixture.whenStable();
   }
@@ -89,6 +97,180 @@ describe('CartPage', () => {
   function button(): HTMLButtonElement {
     return fixture.nativeElement.querySelector('.checkout-actions button');
   }
+
+  function quantityButton(action: 'Sumar' | 'Restar', name = stock.name): HTMLButtonElement {
+    return fixture.nativeElement.querySelector(
+      `button[aria-label="${action} una unidad de ${name}"]`,
+    );
+  }
+
+  it('suma una unidad con PUT y actualiza la cantidad, el total y el contador compartido', async () => {
+    await load([stock]);
+    expect(fixture.nativeElement.querySelector('.total-amount').textContent).toContain('1,200.00');
+    quantityButton('Sumar').click();
+    const request = http.expectOne(`${environment.apiUrl}/cart/items/${stock.product_id}`);
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual({ quantity: 2 });
+    expect(fixture.nativeElement.querySelector('.item-qty').textContent.trim()).toBe('1');
+    const updatedCart = cartResponse([{ ...stock, quantity: 2, subtotal: 2400 }]);
+    request.flush(updatedCart);
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.querySelector('.item-qty').textContent.trim()).toBe('2');
+    expect(fixture.nativeElement.querySelector('.total-amount').textContent).toContain('2,400.00');
+    expect(TestBed.inject(CartService).getCartSignal()()).toEqual(updatedCart);
+    expect(TestBed.inject(CartService).itemCount()).toBe(2);
+    expect(quantityButton('Sumar').disabled).toBe(false);
+  });
+
+  it('resta una unidad con PUT y deshabilita restar al llegar a uno', async () => {
+    await load([{ ...stock, quantity: 2, subtotal: 2400 }]);
+    quantityButton('Restar').click();
+    const request = http.expectOne(`${environment.apiUrl}/cart/items/${stock.product_id}`);
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual({ quantity: 1 });
+    request.flush(cartResponse([stock]));
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.querySelector('.item-qty').textContent.trim()).toBe('1');
+    expect(quantityButton('Restar').disabled).toBe(true);
+    quantityButton('Restar').click();
+    http.expectNone(`${environment.apiUrl}/cart/items/${stock.product_id}`);
+  });
+
+  it('deshabilita sumar al alcanzar el stock y permite sumar productos por encargo con stock cero', async () => {
+    await load([
+      { ...stock, quantity: 2, subtotal: 2400 },
+      { ...encargo, stock_available: 0 },
+    ]);
+    expect(quantityButton('Sumar').disabled).toBe(false);
+    quantityButton('Sumar').click();
+    http.expectOne(`${environment.apiUrl}/cart/items/${stock.product_id}`).flush(
+      cartResponse([
+        { ...stock, quantity: 3, subtotal: 3600 },
+        { ...encargo, stock_available: 0 },
+      ]),
+    );
+    await fixture.whenStable();
+
+    expect(quantityButton('Sumar').disabled).toBe(true);
+    quantityButton('Sumar').click();
+    http.expectNone(`${environment.apiUrl}/cart/items/${stock.product_id}`);
+    expect(quantityButton('Sumar', encargo.name).disabled).toBe(false);
+    quantityButton('Sumar', encargo.name).click();
+    const request = http.expectOne(`${environment.apiUrl}/cart/items/${encargo.product_id}`);
+    expect(request.request.body).toEqual({ quantity: 3 });
+    request.flush(
+      cartResponse([
+        { ...stock, quantity: 3, subtotal: 3600 },
+        { ...encargo, quantity: 3, stock_available: 0 },
+      ]),
+    );
+    await fixture.whenStable();
+    expect(quantityButton('Sumar', encargo.name).disabled).toBe(false);
+  });
+
+  it.each([true, false])(
+    'ajusta al stock disponible y elimina los avisos de exceso (exceeds_stock: %s)',
+    async (exceeds_stock) => {
+      await load([{ ...stock, quantity: 5, subtotal: 6000, exceeds_stock }]);
+      expect(fixture.nativeElement.querySelector('.stock-warning')).toBeTruthy();
+      expect(button().disabled).toBe(true);
+      const adjust: HTMLButtonElement = fixture.nativeElement.querySelector('.adjust-quantity');
+      expect(adjust.textContent.trim()).toBe('Ajustar a 3');
+      adjust.click();
+      const request = http.expectOne(`${environment.apiUrl}/cart/items/${stock.product_id}`);
+      expect(request.request.method).toBe('PUT');
+      expect(request.request.body).toEqual({ quantity: 3 });
+      await fixture.whenStable();
+      expect(adjust.disabled).toBe(true);
+      request.flush(cartResponse([{ ...stock, quantity: 3, subtotal: 3600 }]));
+      await fixture.whenStable();
+
+      expect(fixture.nativeElement.querySelector('.stock-warning')).toBeNull();
+      expect(fixture.nativeElement.querySelector('.adjust-quantity')).toBeNull();
+      expect(fixture.nativeElement.querySelector('.block-reason')).toBeNull();
+      expect(button().disabled).toBe(false);
+    },
+  );
+
+  it('oculta el ajuste cuando no queda stock y conserva el aviso de no disponible', async () => {
+    await load([{ ...stock, stock_available: 0, available: false, exceeds_stock: true }]);
+    expect(fixture.nativeElement.querySelector('.adjust-quantity')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.unavailable-warning').textContent).toContain(
+      'Ya no está disponible',
+    );
+    expect(quantityButton('Sumar').disabled).toBe(true);
+  });
+
+  it('muestra el error 400 de la API en el snackbar, conserva la cantidad y permite reintentar', async () => {
+    await load([stock]);
+    const open = vi.spyOn(fixture.debugElement.injector.get(MatSnackBar), 'open');
+    quantityButton('Sumar').click();
+    http
+      .expectOne(`${environment.apiUrl}/cart/items/${stock.product_id}`)
+      .flush(
+        { error: 'Stock insuficiente. Disponible: 2' },
+        { status: 400, statusText: 'Bad Request' },
+      );
+    await fixture.whenStable();
+
+    expect(open).toHaveBeenCalledWith('Stock insuficiente. Disponible: 2', 'Cerrar', {
+      duration: 3000,
+    });
+    expect(fixture.nativeElement.querySelector('.item-qty').textContent.trim()).toBe('1');
+    expect(fixture.nativeElement.querySelector('.total-amount').textContent).toContain('1,200.00');
+    expect(TestBed.inject(CartService).itemCount()).toBe(1);
+    expect(quantityButton('Sumar').disabled).toBe(false);
+    quantityButton('Sumar').click();
+    http
+      .expectOne(`${environment.apiUrl}/cart/items/${stock.product_id}`)
+      .flush(cartResponse([{ ...stock, quantity: 2, subtotal: 2400 }]));
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('.item-qty').textContent.trim()).toBe('2');
+  });
+
+  it('envía un solo PUT ante un doble clic rápido y bloquea solo el ítem que se actualiza', async () => {
+    await load([{ ...stock, quantity: 2, subtotal: 2400 }, encargo]);
+    const plus = quantityButton('Sumar');
+    plus.click();
+    plus.click();
+    const request = http.expectOne(`${environment.apiUrl}/cart/items/${stock.product_id}`);
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual({ quantity: 3 });
+    await fixture.whenStable();
+
+    expect(plus.disabled).toBe(true);
+    expect(quantityButton('Restar').disabled).toBe(true);
+    const removeButtons: NodeListOf<HTMLButtonElement> = fixture.nativeElement.querySelectorAll(
+      'button[aria-label="Eliminar producto del carrito"]',
+    );
+    expect(removeButtons[0].disabled).toBe(true);
+    expect(removeButtons[1].disabled).toBe(false);
+    expect(quantityButton('Sumar', encargo.name).disabled).toBe(false);
+    expect(quantityButton('Restar', encargo.name).disabled).toBe(false);
+    request.flush(cartResponse([{ ...stock, quantity: 3, subtotal: 3600 }, encargo]));
+    await fixture.whenStable();
+    expect(quantityButton('Restar').disabled).toBe(false);
+    expect(removeButtons[0].disabled).toBe(false);
+  });
+
+  it('bloquea los controles de cantidad mientras se elimina ese producto', async () => {
+    await load([{ ...stock, quantity: 2, subtotal: 2400 }, encargo]);
+    fixture.nativeElement
+      .querySelector('button[aria-label="Eliminar producto del carrito"]')
+      .click();
+    const request = http.expectOne(`${environment.apiUrl}/cart/items/${stock.product_id}`);
+    expect(request.request.method).toBe('DELETE');
+    quantityButton('Sumar').click();
+    http.expectNone(`${environment.apiUrl}/cart/items/${stock.product_id}`);
+    await fixture.whenStable();
+    expect(quantityButton('Sumar').disabled).toBe(true);
+    expect(quantityButton('Restar').disabled).toBe(true);
+    expect(quantityButton('Sumar', encargo.name).disabled).toBe(false);
+    request.flush(cartResponse([encargo]));
+    await fixture.whenStable();
+  });
 
   it.each(['stock', 'mixto', 'encargo'])(
     'confirma un carrito %s y pasa al diálogo el desglose real del pedido',

@@ -46,13 +46,70 @@
               }
 
               @if (exceedsStock(item)) {
-                <span class="item-warning stock-warning">
-                  Solo quedan {{ item.stock_available }} unidades
-                </span>
+                <div class="stock-adjustment">
+                  <span class="item-warning stock-warning">
+                    Solo quedan {{ item.stock_available }} unidades
+                  </span>
+                  @if (item.stock_available !== null && item.stock_available > 0) {
+                    <button
+                      matButton="text"
+                      class="adjust-quantity"
+                      (click)="updateItem(item, item.stock_available)"
+                      [disabled]="
+                        confirming() ||
+                        clearing() ||
+                        removingIds().has(item.product_id) ||
+                        updatingIds().has(item.product_id)
+                      "
+                    >
+                      Ajustar a {{ item.stock_available }}
+                    </button>
+                  }
+                </div>
               }
 
               <div class="item-details">
-                <span class="item-qty">Cant: {{ item.quantity }}</span>
+                <div
+                  class="quantity-control"
+                  role="group"
+                  [attr.aria-label]="'Cantidad de ' + (item.name || 'producto no disponible')"
+                >
+                  <button
+                    matIconButton
+                    (click)="updateItem(item, item.quantity - 1)"
+                    [disabled]="
+                      item.quantity <= 1 ||
+                      confirming() ||
+                      clearing() ||
+                      removingIds().has(item.product_id) ||
+                      updatingIds().has(item.product_id)
+                    "
+                    [attr.aria-label]="
+                      'Restar una unidad de ' + (item.name || 'producto no disponible')
+                    "
+                  >
+                    <mat-icon>remove</mat-icon>
+                  </button>
+                  <span class="item-qty" aria-live="polite">{{ item.quantity }}</span>
+                  <button
+                    matIconButton
+                    (click)="updateItem(item, item.quantity + 1)"
+                    [disabled]="
+                      (item.type === 'stock' &&
+                        item.stock_available !== null &&
+                        item.quantity >= item.stock_available) ||
+                      confirming() ||
+                      clearing() ||
+                      removingIds().has(item.product_id) ||
+                      updatingIds().has(item.product_id)
+                    "
+                    [attr.aria-label]="
+                      'Sumar una unidad de ' + (item.name || 'producto no disponible')
+                    "
+                  >
+                    <mat-icon>add</mat-icon>
+                  </button>
+                </div>
 
                 @if (item.type === 'stock' && hasPrice(item.unit_price)) {
                   <span class="item-price">
@@ -74,7 +131,11 @@
             <button
               matIconButton
               (click)="removeItem(item)"
-              [disabled]="confirming() || removingIds().has(item.product_id)"
+              [disabled]="
+                confirming() ||
+                removingIds().has(item.product_id) ||
+                updatingIds().has(item.product_id)
+              "
               aria-label="Eliminar producto del carrito"
             >
               <mat-icon>delete</mat-icon>
