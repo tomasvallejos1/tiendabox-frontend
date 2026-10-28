@@ -9,6 +9,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { finalize } from 'rxjs';
 
+import { apiErrorMessage } from '../shared/api-error';
 import { CategoryService } from '../shared/category-service';
 
 @Component({
@@ -62,7 +63,7 @@ export class CategoryForm implements OnInit {
           this.loading.set(false);
         },
         error: (err) => {
-          this.errorMessage.set(err.error?.message || 'No se pudo cargar la categoría.');
+          this.errorMessage.set(apiErrorMessage(err, 'No se pudo cargar la categoría.'));
           this.loadFailed.set(true);
           this.loading.set(false);
         },
@@ -93,7 +94,7 @@ export class CategoryForm implements OnInit {
         this.router.navigate(['/admin/categorias']);
       },
       error: (err) => {
-        const message = err.error?.message || 'Error al guardar la categoría. Intentá de nuevo.';
+        const message = apiErrorMessage(err, 'Error al guardar la categoría. Intentá de nuevo.');
         this.errorMessage.set(message);
         this.snackBar.open(message, 'Cerrar', { duration: 5000 });
       },

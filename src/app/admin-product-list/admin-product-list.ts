@@ -13,6 +13,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 import { finalize, forkJoin } from 'rxjs';
 
+import { apiErrorMessage } from '../shared/api-error';
 import { Product } from '../shared/product';
 import { ProductService } from '../shared/product-service';
 import { CategoryService } from '../shared/category-service';
@@ -72,7 +73,7 @@ export class AdminProductList implements OnInit {
         this.loading.set(false);
       },
       error: (err) => {
-        this.errorMessage.set(err.error?.message || 'Error al cargar los productos.');
+        this.errorMessage.set(apiErrorMessage(err, 'Error al cargar los productos.'));
         this.loading.set(false);
       },
     });
@@ -132,7 +133,7 @@ export class AdminProductList implements OnInit {
         },
         error: (err) => {
           this.snackBar.open(
-            err.error?.message || 'No se pudo eliminar el producto. Intentá de nuevo.',
+            apiErrorMessage(err, 'No se pudo eliminar el producto. Intentá de nuevo.'),
             'Cerrar',
             { duration: 5000 },
           );

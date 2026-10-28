@@ -11,6 +11,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { finalize } from 'rxjs';
 
+import { apiErrorMessage } from '../shared/api-error';
 import { Category } from '../shared/category';
 import { CategoryService } from '../shared/category-service';
 
@@ -52,7 +53,7 @@ export class AdminCategoryList implements OnInit {
       .subscribe({
         next: (cats) => this.dataSource.set(cats),
         error: (err) =>
-          this.errorMessage.set(err.error?.message || 'Error al cargar las categorías.'),
+          this.errorMessage.set(apiErrorMessage(err, 'Error al cargar las categorías.')),
       });
   }
 
@@ -97,7 +98,7 @@ export class AdminCategoryList implements OnInit {
           this.snackBar.open('Categoría eliminada', 'Cerrar', { duration: 3000 });
         },
         error: (err) => {
-          const message = err.error?.message ?? 'No se pudo eliminar la categoría.';
+          const message = apiErrorMessage(err, 'No se pudo eliminar la categoría.');
           this.snackBar.open(message, 'Cerrar', { duration: 5000 });
         },
       });

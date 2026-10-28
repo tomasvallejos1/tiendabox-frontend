@@ -100,6 +100,26 @@ describe('Profile', () => {
     expect(fixture.nativeElement.querySelector('button[type="submit"]').disabled).toBe(false);
   });
 
+  it.each([
+    {
+      body: { error: 'El CUIT debe tener 11 dígitos numéricos' },
+      expected: 'El CUIT debe tener 11 dígitos numéricos',
+    },
+    { body: null, expected: 'No se pudo guardar el perfil. Intentá de nuevo.' },
+  ])('muestra el error al guardar el perfil: $expected', async ({ body, expected }) => {
+    const fixture = await render();
+    fixture.nativeElement
+      .querySelector('form')
+      .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    const request = http.expectOne(`${environment.apiUrl}/customer/cus-1`);
+    expect(request.request.method).toBe('PUT');
+    request.flush(body, { status: 400, statusText: 'Bad Request' });
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.querySelector('.error-message').textContent).toContain(expected);
+    expect(fixture.nativeElement.querySelector('button[type="submit"]').disabled).toBe(false);
+  });
+
   it('changes the document validation and hint when the tax status changes', async () => {
     const fixture = await render();
     const form = fixture.componentInstance['form'];

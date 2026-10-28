@@ -108,7 +108,7 @@ describe('BrandForm', () => {
     await submit();
     http
       .expectOne(`${environment.apiUrl}/brand`)
-      .flush({ message: 'La marca ya existe' }, { status: 409, statusText: 'Conflict' });
+      .flush({ error: 'La marca ya existe' }, { status: 409, statusText: 'Conflict' });
     await fixture.whenStable();
     expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain(
       'La marca ya existe',

@@ -11,6 +11,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { finalize } from 'rxjs';
 
+import { apiErrorMessage } from '../shared/api-error';
 import { Category } from '../shared/category';
 import { Brand } from '../shared/brand';
 import { ProductType } from '../shared/product';
@@ -99,7 +100,7 @@ export class ProductForm implements OnInit {
           this.loading.set(false);
         },
         error: (err) => {
-          this.errorMessage.set(err.error?.message || 'No se pudo cargar el producto.');
+          this.errorMessage.set(apiErrorMessage(err, 'No se pudo cargar el producto.'));
           this.loadFailed.set(true);
           this.loading.set(false);
         },
@@ -144,7 +145,7 @@ export class ProductForm implements OnInit {
         this.router.navigate(['/admin/productos']);
       },
       error: (err) => {
-        const message = err.error?.message || 'Error al guardar el producto. Intentá de nuevo.';
+        const message = apiErrorMessage(err, 'Error al guardar el producto. Intentá de nuevo.');
         this.errorMessage.set(message);
         this.snackBar.open(message, 'Cerrar', { duration: 5000 });
       },

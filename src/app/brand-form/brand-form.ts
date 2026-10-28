@@ -9,6 +9,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { finalize } from 'rxjs';
 
+import { apiErrorMessage } from '../shared/api-error';
 import { BrandService } from '../shared/brand-service';
 
 @Component({
@@ -62,7 +63,7 @@ export class BrandForm implements OnInit {
           this.loading.set(false);
         },
         error: (err) => {
-          this.errorMessage.set(err.error?.message || 'No se pudo cargar la marca.');
+          this.errorMessage.set(apiErrorMessage(err, 'No se pudo cargar la marca.'));
           this.loadFailed.set(true);
           this.loading.set(false);
         },
@@ -91,7 +92,7 @@ export class BrandForm implements OnInit {
         this.router.navigate(['/admin/marcas']);
       },
       error: (err) => {
-        const message = err.error?.message || 'Error al guardar la marca. Intentá de nuevo.';
+        const message = apiErrorMessage(err, 'Error al guardar la marca. Intentá de nuevo.');
         this.errorMessage.set(message);
         this.snackBar.open(message, 'Cerrar', { duration: 5000 });
       },

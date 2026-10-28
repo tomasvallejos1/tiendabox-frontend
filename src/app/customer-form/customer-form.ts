@@ -11,6 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { finalize } from 'rxjs';
+import { apiErrorMessage } from '../shared/api-error';
 import { CustomerService } from '../shared/customer-service';
 import { CreateCustomerPayload, governmentIdRule, TaxStatus } from '../shared/customer';
 import { GeneratedPasswordDialog } from '../generated-password-dialog/generated-password-dialog';
@@ -118,7 +119,7 @@ export class CustomerForm implements OnInit {
         },
         error: (err) => {
           this.loadFailed.set(true);
-          this.errorMessage.set(err.error?.message || 'No se pudo cargar el cliente.');
+          this.errorMessage.set(apiErrorMessage(err, 'No se pudo cargar el cliente.'));
         },
       });
   }
@@ -146,7 +147,10 @@ export class CustomerForm implements OnInit {
         .pipe(finalize(() => this.saving.set(false)))
         .subscribe({
           next: () => this.finish('Cliente actualizado'),
-          error: (err) => this.showError(err.error?.message),
+          error: (err) =>
+            this.showError(
+              apiErrorMessage(err, 'No se pudo guardar el cliente. Intentá de nuevo.'),
+            ),
         });
     } else {
       const payload: CreateCustomerPayload = { ...profile };
@@ -170,7 +174,10 @@ export class CustomerForm implements OnInit {
                 .subscribe(() => this.router.navigate(['/admin/clientes']));
             } else this.finish('Cliente creado');
           },
-          error: (err) => this.showError(err.error?.message),
+          error: (err) =>
+            this.showError(
+              apiErrorMessage(err, 'No se pudo guardar el cliente. Intentá de nuevo.'),
+            ),
         });
     }
   }
@@ -180,9 +187,8 @@ export class CustomerForm implements OnInit {
     this.router.navigate(['/admin/clientes']);
   }
 
-  private showError(message?: string): void {
-    const text = message || 'No se pudo guardar el cliente. Intentá de nuevo.';
-    this.errorMessage.set(text);
-    this.snackBar.open(text, 'Cerrar', { duration: 5000 });
+  private showError(message: string): void {
+    this.errorMessage.set(message);
+    this.snackBar.open(message, 'Cerrar', { duration: 5000 });
   }
 }

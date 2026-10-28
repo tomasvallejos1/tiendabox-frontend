@@ -114,7 +114,7 @@ describe('CategoryForm', () => {
     await submit();
     http
       .expectOne(`${environment.apiUrl}/category`)
-      .flush({ message: 'La categoría ya existe' }, { status: 409, statusText: 'Conflict' });
+      .flush({ error: 'La categoría ya existe' }, { status: 409, statusText: 'Conflict' });
     await fixture.whenStable();
     expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain(
       'La categoría ya existe',

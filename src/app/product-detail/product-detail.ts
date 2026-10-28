@@ -13,6 +13,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { FormsModule } from '@angular/forms';
 
+import { apiErrorMessage } from '../shared/api-error';
 import { ProductWithNames } from '../shared/product';
 import { ProductService } from '../shared/product-service';
 import { AuthService } from '../shared/auth-service';
@@ -106,7 +107,7 @@ export class ProductDetail implements OnInit {
         ref.onAction().subscribe(() => this.router.navigate(['/carrito']));
       },
       error: (err: HttpErrorResponse) => {
-        const message = err.error?.error ?? 'No se pudo agregar al carrito';
+        const message = apiErrorMessage(err, 'No se pudo agregar al carrito');
         this.snackBar.open(message, 'Cerrar', { duration: 4000 });
       },
     });

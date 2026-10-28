@@ -51,7 +51,7 @@ describe('AdminBrandList', () => {
     const request = http.expectOne(environment.apiUrl + '/brand/test-id');
     expect(request.request.method).toBe('DELETE');
     request.flush(
-      { message: 'No se puede eliminar: está en uso' },
+      { error: 'No se puede eliminar: está en uso' },
       { status: 409, statusText: 'Conflict' },
     );
     expect(snackBar.open).toHaveBeenLastCalledWith('No se puede eliminar: está en uso', 'Cerrar', {

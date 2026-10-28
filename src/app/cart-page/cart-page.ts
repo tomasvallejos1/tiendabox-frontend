@@ -15,6 +15,7 @@ import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
+import { apiErrorMessage } from '../shared/api-error';
 import { AuthService } from '../shared/auth-service';
 import { Cart, CartItem } from '../shared/cart';
 import { CartService } from '../shared/cart-service';
@@ -275,9 +276,11 @@ export class CartPage implements OnInit {
             this.form.controls.delivery_address.setValue(updated.address);
           }
         },
-        error: () => {
+        error: (err) => {
           this.profileSaving.set(false);
-          this.profileError.set('No se pudieron guardar tus datos. Intentá de nuevo.');
+          this.profileError.set(
+            apiErrorMessage(err, 'No se pudieron guardar tus datos. Intentá de nuevo.'),
+          );
         },
       });
   }
@@ -370,10 +373,7 @@ export class CartPage implements OnInit {
       },
       error: (err) => {
         this.confirming.set(false);
-        const msg =
-          err?.error?.message ||
-          err?.error?.error ||
-          'No se pudo crear el pedido. Intentá de nuevo más tarde.';
+        const msg = apiErrorMessage(err, 'No se pudo crear el pedido. Intentá de nuevo más tarde.');
         this.errorMessage.set(msg);
       },
     });

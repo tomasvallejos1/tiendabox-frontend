@@ -11,6 +11,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { AuthService } from '../shared/auth-service';
+import { apiErrorMessage } from '../shared/api-error';
 import { CustomerService } from '../shared/customer-service';
 import { governmentIdRule, TaxStatus } from '../shared/customer';
 
@@ -107,22 +108,26 @@ export class Profile implements OnInit {
     this.errorMessage.set(null);
 
     const value = this.form.getRawValue();
-    this.customerService.updateCustomer(this.customerId, {
-      name: value.name,
-      government_id: value.government_id || null,
-      tax_status: value.tax_status,
-      phone: value.phone || null,
-      address: value.address || null,
-    }).subscribe({
-      next: () => {
-        this.saving.set(false);
-        this.snackBar.open('Perfil actualizado', 'Cerrar', { duration: 3000 });
-      },
-      error: () => {
-        this.saving.set(false);
-        this.errorMessage.set('No se pudo guardar el perfil. Intentá de nuevo.');
-      },
-    });
+    this.customerService
+      .updateCustomer(this.customerId, {
+        name: value.name,
+        government_id: value.government_id || null,
+        tax_status: value.tax_status,
+        phone: value.phone || null,
+        address: value.address || null,
+      })
+      .subscribe({
+        next: () => {
+          this.saving.set(false);
+          this.snackBar.open('Perfil actualizado', 'Cerrar', { duration: 3000 });
+        },
+        error: (err) => {
+          this.saving.set(false);
+          this.errorMessage.set(
+            apiErrorMessage(err, 'No se pudo guardar el perfil. Intentá de nuevo.'),
+          );
+        },
+      });
   }
 
   private applyGovernmentIdRule(taxStatus: string): void {

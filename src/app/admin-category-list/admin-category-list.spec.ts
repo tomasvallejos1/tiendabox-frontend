@@ -51,7 +51,7 @@ describe('AdminCategoryList', () => {
     const request = http.expectOne(environment.apiUrl + '/category/test-id');
     expect(request.request.method).toBe('DELETE');
     request.flush(
-      { message: 'No se puede eliminar: está en uso' },
+      { error: 'No se puede eliminar: está en uso' },
       { status: 409, statusText: 'Conflict' },
     );
     expect(snackBar.open).toHaveBeenLastCalledWith('No se puede eliminar: está en uso', 'Cerrar', {

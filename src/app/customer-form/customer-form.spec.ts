@@ -164,17 +164,15 @@ describe('CustomerForm', () => {
     id = 'local-id';
     const fixture = TestBed.createComponent(CustomerForm);
     await fixture.whenStable();
-    http
-      .expectOne(environment.apiUrl + '/customer/local-id')
-      .flush({
-        id,
-        user_id: null,
-        name: 'Local',
-        tax_status: 'consumidor_final',
-        government_id: null,
-        phone: null,
-        address: null,
-      });
+    http.expectOne(environment.apiUrl + '/customer/local-id').flush({
+      id,
+      user_id: null,
+      name: 'Local',
+      tax_status: 'consumidor_final',
+      government_id: null,
+      phone: null,
+      address: null,
+    });
     await fixture.whenStable();
     expect(fixture.nativeElement.textContent).toContain('Es un cliente de local');
     expect(fixture.nativeElement.querySelector('input[type=email]')).toBeNull();
@@ -199,7 +197,7 @@ describe('CustomerForm', () => {
     fixture.componentInstance.submit();
     http
       .expectOne(environment.apiUrl + '/customer')
-      .flush({ message: 'CUIT ya registrado' }, { status: 409, statusText: 'Conflict' });
+      .flush({ error: 'CUIT ya registrado' }, { status: 409, statusText: 'Conflict' });
     await fixture.whenStable();
     expect(fixture.nativeElement.textContent).toContain('CUIT ya registrado');
     expect(fixture.componentInstance['saving']()).toBe(false);

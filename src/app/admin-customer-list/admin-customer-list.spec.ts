@@ -84,7 +84,7 @@ describe('AdminCustomerList', () => {
     component['confirmDelete'](local);
     const failed = http.expectOne(environment.apiUrl + '/customer/local');
     expect(failed.request.method).toBe('DELETE');
-    failed.flush({ message: 'El cliente tiene pedidos' }, { status: 409, statusText: 'Conflict' });
+    failed.flush({ error: 'El cliente tiene pedidos' }, { status: 409, statusText: 'Conflict' });
     expect(snack).toHaveBeenCalledWith('El cliente tiene pedidos', 'Cerrar', expect.anything());
     expect(component['customers']()).toHaveLength(1);
     component['confirmDelete'](local);
@@ -97,7 +97,7 @@ describe('AdminCustomerList', () => {
     await fixture.whenStable();
     http
       .expectOne(environment.apiUrl + '/customers')
-      .flush({ message: 'Acceso denegado' }, { status: 403, statusText: 'Forbidden' });
+      .flush({ error: 'Acceso denegado' }, { status: 403, statusText: 'Forbidden' });
     await fixture.whenStable();
     expect(fixture.nativeElement.textContent).toContain('Acceso denegado');
     fixture.componentInstance['loadCustomers']();

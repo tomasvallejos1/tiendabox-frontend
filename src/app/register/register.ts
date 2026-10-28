@@ -9,6 +9,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 
+import { apiErrorMessage } from '../shared/api-error';
 import { AuthService } from '../shared/auth-service';
 
 @Component({
@@ -66,7 +67,7 @@ export class Register {
         },
         error: (err: HttpErrorResponse) => {
           this.errorMessage.set(
-            err.error?.error ?? 'No se pudo crear la cuenta. Intentá de nuevo.',
+            apiErrorMessage(err, 'No se pudo crear la cuenta. Intentá de nuevo.'),
           );
         },
       });

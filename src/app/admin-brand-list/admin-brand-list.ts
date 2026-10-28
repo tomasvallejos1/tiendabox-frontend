@@ -11,6 +11,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { finalize } from 'rxjs';
 
+import { apiErrorMessage } from '../shared/api-error';
 import { Brand } from '../shared/brand';
 import { BrandService } from '../shared/brand-service';
 
@@ -51,7 +52,7 @@ export class AdminBrandList implements OnInit {
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: (brands) => this.dataSource.set(brands),
-        error: (err) => this.errorMessage.set(err.error?.message || 'Error al cargar las marcas.'),
+        error: (err) => this.errorMessage.set(apiErrorMessage(err, 'Error al cargar las marcas.')),
       });
   }
 
@@ -96,7 +97,7 @@ export class AdminBrandList implements OnInit {
           this.snackBar.open('Marca eliminada', 'Cerrar', { duration: 3000 });
         },
         error: (err) => {
-          const message = err.error?.message ?? 'No se pudo eliminar la marca.';
+          const message = apiErrorMessage(err, 'No se pudo eliminar la marca.');
           this.snackBar.open(message, 'Cerrar', { duration: 5000 });
         },
       });

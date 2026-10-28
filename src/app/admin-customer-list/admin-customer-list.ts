@@ -14,6 +14,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { finalize } from 'rxjs';
 import { ConfirmDialog } from '../confirm-dialog/confirm-dialog';
+import { apiErrorMessage } from '../shared/api-error';
 import { CustomerWithEmail } from '../shared/customer';
 import { CustomerService } from '../shared/customer-service';
 
@@ -77,7 +78,7 @@ export class AdminCustomerList implements OnInit {
       .subscribe({
         next: (customers) => this.customers.set(customers),
         error: (err) =>
-          this.errorMessage.set(err.error?.message || 'No se pudieron cargar los clientes.'),
+          this.errorMessage.set(apiErrorMessage(err, 'No se pudieron cargar los clientes.')),
       });
   }
 
@@ -130,7 +131,7 @@ export class AdminCustomerList implements OnInit {
             },
             error: (err) =>
               this.snackBar.open(
-                err.error?.message || 'No se pudo eliminar el cliente.',
+                apiErrorMessage(err, 'No se pudo eliminar el cliente.'),
                 'Cerrar',
                 { duration: 5000 },
               ),

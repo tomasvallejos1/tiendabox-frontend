@@ -15,6 +15,7 @@ import { Router, RouterLink } from '@angular/router';
 import { finalize, forkJoin } from 'rxjs';
 
 import { ProductTypeBadge } from '../product-type-badge/product-type-badge';
+import { apiErrorMessage } from '../shared/api-error';
 import { CustomerWithEmail } from '../shared/customer';
 import { CustomerService } from '../shared/customer-service';
 import { CreateOrderPayload, OrderService } from '../shared/order-service';
@@ -168,9 +169,7 @@ export class AdminOrderForm implements OnInit {
         error: (err) => {
           this.loadFailed.set(true);
           this.errorMessage.set(
-            err.error?.message ||
-              err.error?.error ||
-              'No se pudieron cargar los clientes y productos.',
+            apiErrorMessage(err, 'No se pudieron cargar los clientes y productos.'),
           );
         },
       });
@@ -256,9 +255,7 @@ export class AdminOrderForm implements OnInit {
         },
         error: (err) => {
           this.errorMessage.set(
-            err.error?.message ||
-              err.error?.error ||
-              'No se pudo crear el pedido. Intentá de nuevo.',
+            apiErrorMessage(err, 'No se pudo crear el pedido. Intentá de nuevo.'),
           );
         },
       });

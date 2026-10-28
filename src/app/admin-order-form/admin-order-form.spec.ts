@@ -251,27 +251,24 @@ describe('AdminOrderForm', () => {
     expect(form.valid).toBe(true);
   });
 
-  it.each(['message', 'error'])(
-    'muestra el error de stock del backend (%s) y permite reintentar sin perder los ítems',
-    async (key) => {
-      await selectCustomer();
-      await addProduct(stock.name);
-      fixture.componentInstance['form'].controls.delivery_type.setValue('retiro');
-      submit();
-      http
-        .expectOne(`${environment.apiUrl}/order`)
-        .flush(
-          { [key]: 'Stock insuficiente para Caja en stock' },
-          { status: 400, statusText: 'Bad Request' },
-        );
-      await fixture.whenStable();
-      expect(fixture.nativeElement.textContent).toContain('Stock insuficiente para Caja en stock');
-      expect(saveButton().disabled).toBe(false);
-      expect(TestBed.inject(Router).navigate).not.toHaveBeenCalled();
-      submit();
-      http.expectOne(`${environment.apiUrl}/order`).flush({ id: 'retry-order' });
-    },
-  );
+  it('muestra el error de stock del backend y permite reintentar sin perder los ítems', async () => {
+    await selectCustomer();
+    await addProduct(stock.name);
+    fixture.componentInstance['form'].controls.delivery_type.setValue('retiro');
+    submit();
+    http
+      .expectOne(`${environment.apiUrl}/order`)
+      .flush(
+        { error: 'Stock insuficiente para Caja en stock' },
+        { status: 400, statusText: 'Bad Request' },
+      );
+    await fixture.whenStable();
+    expect(fixture.nativeElement.textContent).toContain('Stock insuficiente para Caja en stock');
+    expect(saveButton().disabled).toBe(false);
+    expect(TestBed.inject(Router).navigate).not.toHaveBeenCalled();
+    submit();
+    http.expectOne(`${environment.apiUrl}/order`).flush({ id: 'retry-order' });
+  });
 
   it('excluye productos inactivos y mantiene clientes sin email', async () => {
     expect(fixture.componentInstance['filteredProducts']().map((product) => product.id)).toEqual([

@@ -14,6 +14,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
+import { apiErrorMessage } from '../shared/api-error';
 import { Order, OrderStatus } from '../shared/order';
 import { OrderService } from '../shared/order-service';
 import { nextStatus, ORDER_STATUS_FLOW, ORDER_STATUS_LABELS } from '../shared/order-status';
@@ -186,7 +187,7 @@ export class AdminOrderList implements OnInit {
       },
       error: (err) => {
         this.removeAdvancing(order.id);
-        const message = err.error?.message || 'No se pudo actualizar el estado. Intentá de nuevo.';
+        const message = apiErrorMessage(err, 'No se pudo actualizar el estado. Intentá de nuevo.');
         this.errorMessage.set(message);
         this.snackBar.open(message, 'Cerrar', { duration: 5000 });
       },
@@ -257,7 +258,7 @@ export class AdminOrderList implements OnInit {
         this.loading.set(false);
         this.loadFailed.set(true);
         this.errorMessage.set(
-          err.error?.message || 'No se pudieron cargar los pedidos. Intentá de nuevo más tarde.',
+          apiErrorMessage(err, 'No se pudieron cargar los pedidos. Intentá de nuevo más tarde.'),
         );
       },
     });

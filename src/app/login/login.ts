@@ -8,6 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 
+import { apiErrorMessage } from '../shared/api-error';
 import { AuthService } from '../shared/auth-service';
 
 @Component({
@@ -56,7 +57,9 @@ export class Login {
           this.router.navigate([response.role === 'owner' ? '/admin/productos' : '/productos']);
         },
         error: (err: HttpErrorResponse) => {
-          this.errorMessage.set(err.error?.error ?? 'No se pudo iniciar sesión. Intentá de nuevo.');
+          this.errorMessage.set(
+            apiErrorMessage(err, 'No se pudo iniciar sesión. Intentá de nuevo.'),
+          );
         },
       });
   }

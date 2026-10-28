@@ -164,6 +164,31 @@ describe('CartPage', () => {
     expect(fixture.componentInstance['profileComplete']()).toBe(false);
   });
 
+  it.each([
+    {
+      body: { error: 'El CUIT debe tener 11 dígitos numéricos' },
+      expected: 'El CUIT debe tener 11 dígitos numéricos',
+    },
+    { body: null, expected: 'No se pudieron guardar tus datos. Intentá de nuevo.' },
+  ])('muestra el error al guardar los datos del perfil: $expected', async ({ body, expected }) => {
+    await load([encargo], { ...customer, government_id: null });
+    fixture.componentInstance['profileForm'].controls.government_id.setValue('20123456789');
+    fixture.nativeElement
+      .querySelector('.profile-card form')
+      .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    const request = http.expectOne(`${environment.apiUrl}/customer/${customer.id}`);
+    expect(request.request.method).toBe('PUT');
+    request.flush(body, { status: 400, statusText: 'Bad Request' });
+    await fixture.whenStable();
+
+    expect(
+      fixture.nativeElement.querySelector('.profile-card .error-message').textContent,
+    ).toContain(expected);
+    expect(
+      fixture.nativeElement.querySelector('.profile-card button[type="submit"]').disabled,
+    ).toBe(false);
+  });
+
   it('valida entrega y exige una dirección no vacía solo para envío', async () => {
     await load([encargo]);
     button().click();
