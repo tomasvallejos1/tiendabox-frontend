@@ -120,17 +120,18 @@ describe('Navbar', () => {
     expect(auth.logout).toHaveBeenCalledOnce();
   });
 
-  it('mantiene el badge visible con cero y actualiza la cantidad desde CartService', async () => {
+  it('oculta el badge con cero y actualiza la cantidad desde CartService', async () => {
     role.set('cliente');
     await fixture.whenStable();
     const badge = fixture.debugElement.query(By.directive(MatBadge)).injector.get(MatBadge);
-    expect(badge.hidden).toBe(false);
+    expect(badge.hidden).toBe(true);
     expect(fixture.nativeElement.querySelector('.navbar-cart .mat-badge-content').textContent).toBe(
       '0',
     );
 
     setItemCount(5);
     await fixture.whenStable();
+    expect(badge.hidden).toBe(false);
     expect(fixture.nativeElement.querySelector('.navbar-cart .mat-badge-content').textContent).toBe(
       String(cartService.itemCount()),
     );
@@ -140,7 +141,7 @@ describe('Navbar', () => {
 
     cartService.setCart(null);
     await fixture.whenStable();
-    expect(badge.hidden).toBe(false);
+    expect(badge.hidden).toBe(true);
     expect(fixture.nativeElement.querySelector('.navbar-cart .mat-badge-content').textContent).toBe(
       '0',
     );

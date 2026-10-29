@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
-import { computed, Injectable, signal } from '@angular/core';
+import { computed, effect, Injectable, signal } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../environments/environment';
+import { AuthService } from './auth-service';
 import { Cart } from './cart';
 
 @Injectable({ providedIn: 'root' })
@@ -12,11 +13,13 @@ export class CartService {
   private readonly cart = signal<Cart | null>(null);
   readonly itemCount = computed(() => this.cart()?.item_count ?? 0);
 
-  constructor(private http: HttpClient) {}
-
-  /** Devuelve el carrito actual como signal (para la navbar, etc.). */
-  getCartSignal() {
-    return this.cart;
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService,
+  ) {
+    effect(() => {
+      if (!this.authService.isLoggedIn()) this.setCart(null);
+    });
   }
 
   /** Actualiza el carrito almacenado en la signal. */
@@ -26,6 +29,19 @@ export class CartService {
 
   getCart(): Observable<Cart> {
     return this.http.get<Cart>(this.apiUrl);
+  }
+
+  refresh(): void {
+    // Una respuesta de una sesión anterior no debe restaurar su carrito.
+    const token = this.authService.getToken();
+    this.getCart().subscribe({
+      next: (cart) => {
+        if (this.authService.getToken() === token) this.setCart(cart);
+      },
+      error: () => {
+        if (this.authService.getToken() === token) this.setCart(null);
+      },
+    });
   }
 
   addItem(productId: string, quantity: number): Observable<Cart> {

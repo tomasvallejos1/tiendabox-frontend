@@ -54,6 +54,7 @@
       >
         <mat-icon
           [matBadge]="cartService.itemCount()"
+          [matBadgeHidden]="cartService.itemCount() === 0"
           matBadgeDescription="Productos en el carrito"
           matBadgeSize="small"
           >shopping_cart</mat-icon

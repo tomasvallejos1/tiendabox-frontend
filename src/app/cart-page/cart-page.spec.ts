@@ -56,7 +56,10 @@ describe('CartPage', () => {
         provideRouter([]),
         provideHttpClient(),
         provideHttpClientTesting(),
-        { provide: AuthService, useValue: { getCustomerId: () => customer.id } },
+        {
+          provide: AuthService,
+          useValue: { getCustomerId: () => customer.id, isLoggedIn: () => true },
+        },
       ],
     }).compileComponents();
 

@@ -28,7 +28,11 @@ export class Navbar {
     protected authService: AuthService,
     protected cartService: CartService,
     private router: Router,
-  ) {}
+  ) {
+    if (this.authService.isLoggedIn() && this.authService.isCliente()) {
+      this.cartService.refresh();
+    }
+  }
 
   logout(): void {
     this.authService.logout().subscribe(() => {

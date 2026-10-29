@@ -10,6 +10,7 @@ import { finalize } from 'rxjs';
 
 import { apiErrorMessage } from '../shared/api-error';
 import { AuthService } from '../shared/auth-service';
+import { CartService } from '../shared/cart-service';
 
 @Component({
   selector: 'app-login',
@@ -37,6 +38,7 @@ export class Login {
 
   constructor(
     private authService: AuthService,
+    private cartService: CartService,
     private router: Router,
   ) {}
 
@@ -54,6 +56,7 @@ export class Login {
       .pipe(finalize(() => this.saving.set(false)))
       .subscribe({
         next: (response) => {
+          if (response.role === 'cliente') this.cartService.refresh();
           this.router.navigate([response.role === 'owner' ? '/admin/productos' : '/productos']);
         },
         error: (err: HttpErrorResponse) => {
