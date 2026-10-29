@@ -13,7 +13,12 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { finalize } from 'rxjs';
 import { apiErrorMessage } from '../shared/api-error';
 import { CustomerService } from '../shared/customer-service';
-import { CreateCustomerPayload, governmentIdRule, TaxStatus } from '../shared/customer';
+import {
+  bindGovernmentIdRule,
+  CreateCustomerPayload,
+  governmentIdRule,
+  TaxStatus,
+} from '../shared/customer';
 import { GeneratedPasswordDialog } from '../generated-password-dialog/generated-password-dialog';
 
 @Component({
@@ -35,7 +40,7 @@ export class CustomerForm implements OnInit {
   private fb = inject(FormBuilder);
   protected readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.pattern(/\S/)]],
-    // Sus validadores dependen de tax_status: los aplica applyGovernmentIdRule.
+    // Sus validadores dependen de tax_status: los aplica bindGovernmentIdRule.
     government_id: [''],
     tax_status: ['consumidor_final', Validators.required],
     phone: [''],
@@ -80,21 +85,9 @@ export class CustomerForm implements OnInit {
         else email.clearValidators();
         email.updateValueAndValidity();
       });
-    // Validacion condicional del documento: cambia con la condicion fiscal elegida. El
-    // patchValue de loadCustomer tambien dispara valueChanges.
-    this.applyGovernmentIdRule(this.form.controls.tax_status.value);
-    this.form.controls.tax_status.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((taxStatus) => this.applyGovernmentIdRule(taxStatus));
+    // Validacion condicional del documento: cambia con la condicion fiscal elegida.
+    bindGovernmentIdRule(this.form, this.destroyRef, (rule) => this.documentRule.set(rule));
     if (this.isEditing()) this.loadCustomer();
-  }
-
-  private applyGovernmentIdRule(taxStatus: string): void {
-    const rule = governmentIdRule(taxStatus);
-    this.documentRule.set(rule);
-    const control = this.form.controls.government_id;
-    control.setValidators(Validators.pattern(rule.pattern));
-    control.updateValueAndValidity();
   }
 
   protected loadCustomer(): void {

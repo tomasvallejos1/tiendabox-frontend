@@ -20,7 +20,7 @@ import { apiErrorMessage } from '../shared/api-error';
 import { AuthService } from '../shared/auth-service';
 import { Cart, CartItem } from '../shared/cart';
 import { CartService } from '../shared/cart-service';
-import { Customer, governmentIdRule, TaxStatus } from '../shared/customer';
+import { bindGovernmentIdRule, Customer, governmentIdRule, TaxStatus } from '../shared/customer';
 import { CustomerService } from '../shared/customer-service';
 import { OrderService } from '../shared/order-service';
 import { hasPrice, summarizeOrderItems } from '../shared/order-summary';
@@ -62,6 +62,7 @@ export class CartPage implements OnInit {
   // Formulario de datos faltantes del perfil.
   protected readonly profileForm = this.fb.nonNullable.group({
     name: ['', Validators.pattern(/\S/)],
+    // Sus validadores dependen de tax_status: los aplica bindGovernmentIdRule.
     government_id: [''],
     tax_status: ['consumidor_final' as string],
     phone: [''],
@@ -115,10 +116,7 @@ export class CartPage implements OnInit {
   ngOnInit(): void {
     this.customerId = this.authService.getCustomerId();
 
-    this.applyGovernmentIdRule(this.profileForm.controls.tax_status.value);
-    this.profileForm.controls.tax_status.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((taxStatus) => this.applyGovernmentIdRule(taxStatus));
+    bindGovernmentIdRule(this.profileForm, this.destroyRef, (rule) => this.documentRule.set(rule));
 
     // Suscripción a cambios del delivery_type para validación condicional de la dirección.
     this.form.controls.delivery_type.valueChanges
@@ -210,14 +208,6 @@ export class CartPage implements OnInit {
       );
       control.updateValueAndValidity();
     }
-  }
-
-  private applyGovernmentIdRule(taxStatus: string): void {
-    const rule = governmentIdRule(taxStatus);
-    this.documentRule.set(rule);
-    const control = this.profileForm.controls.government_id;
-    control.setValidators(Validators.pattern(rule.pattern));
-    control.updateValueAndValidity();
   }
 
   /** Comprueba si un campo específico falta en el perfil. */

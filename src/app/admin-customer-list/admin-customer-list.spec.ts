@@ -49,7 +49,7 @@ describe('AdminCustomerList', () => {
   });
   afterEach(() => http.verify());
 
-  it('filters name, email and CUIT in memory and distinguishes local clients', async () => {
+  it('filters name, email and document in memory and distinguishes local clients', async () => {
     const fixture = TestBed.createComponent(AdminCustomerList);
     await fixture.whenStable();
     http.expectOne(environment.apiUrl + '/customers').flush([local, web]);

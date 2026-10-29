@@ -1,7 +1,5 @@
-import { Component, DestroyRef, OnInit, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -13,7 +11,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AuthService } from '../shared/auth-service';
 import { apiErrorMessage } from '../shared/api-error';
 import { CustomerService } from '../shared/customer-service';
-import { governmentIdRule, TaxStatus } from '../shared/customer';
+import { bindGovernmentIdRule, governmentIdRule, TaxStatus } from '../shared/customer';
 
 @Component({
   selector: 'app-profile',
@@ -32,11 +30,10 @@ import { governmentIdRule, TaxStatus } from '../shared/customer';
 })
 export class Profile implements OnInit {
   private fb = inject(FormBuilder);
-  private destroyRef = inject(DestroyRef);
 
   protected readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.pattern(/\S/)]],
-    // Sus validadores dependen de tax_status: los aplica applyGovernmentIdRule.
+    // Sus validadores dependen de tax_status: los aplica bindGovernmentIdRule.
     government_id: [''],
     tax_status: ['consumidor_final' as string],
     phone: [''],
@@ -63,15 +60,12 @@ export class Profile implements OnInit {
     private authService: AuthService,
     private customerService: CustomerService,
     private snackBar: MatSnackBar,
+    private destroyRef: DestroyRef,
   ) {}
 
   ngOnInit(): void {
-    // Validacion condicional del documento: cambia con la condicion fiscal elegida. El
-    // patchValue de la carga del perfil tambien dispara valueChanges.
-    this.applyGovernmentIdRule(this.form.controls.tax_status.value);
-    this.form.controls.tax_status.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((taxStatus) => this.applyGovernmentIdRule(taxStatus));
+    // Validacion condicional del documento: cambia con la condicion fiscal elegida.
+    bindGovernmentIdRule(this.form, this.destroyRef, (rule) => this.documentRule.set(rule));
 
     this.customerId = this.authService.getCustomerId();
     if (!this.customerId) {
@@ -128,13 +122,5 @@ export class Profile implements OnInit {
           );
         },
       });
-  }
-
-  private applyGovernmentIdRule(taxStatus: string): void {
-    const rule = governmentIdRule(taxStatus);
-    this.documentRule.set(rule);
-    const control = this.form.controls.government_id;
-    control.setValidators(Validators.pattern(rule.pattern));
-    control.updateValueAndValidity();
   }
 }

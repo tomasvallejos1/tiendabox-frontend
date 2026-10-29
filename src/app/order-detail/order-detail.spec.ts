@@ -82,12 +82,14 @@ describe('OrderDetail', () => {
     for (const value of [
       'María Pérez',
       '11 5555-1234',
+      'Documento',
       '20123456789',
       'Monotributo',
       'San Martín 123',
     ]) {
       expect(text).toContain(value);
     }
+    expect(text).not.toContain('CUIT');
   });
 
   it.each(['mixto', 'encargo'])(
@@ -311,7 +313,7 @@ describe('OrderDetail', () => {
     await load();
     const card: HTMLElement = fixture.nativeElement.querySelector('.customer-card');
     expect(card.textContent).toContain('Sin teléfono cargado');
-    expect(card.textContent).toContain('Sin CUIT cargado');
+    expect(card.textContent).toContain('Sin documento cargado');
     expect(card.textContent).toContain('Sin dirección cargada');
     expect(card.querySelector<HTMLButtonElement>('.whatsapp-action button')!.disabled).toBe(true);
   });

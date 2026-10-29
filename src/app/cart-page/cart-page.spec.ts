@@ -457,6 +457,24 @@ describe('CartPage', () => {
     http.expectNone(`${environment.apiUrl}/order`);
   });
 
+  it('acepta un DNI para consumidor final y lo rechaza al pasar a monotributo', async () => {
+    await load([stock], { ...customer, phone: null, government_id: null });
+    const form = fixture.componentInstance['profileForm'];
+    const document = form.controls.government_id;
+    const card = (): string => fixture.nativeElement.querySelector('.profile-card').textContent;
+    document.setValue('30123456');
+    document.markAsTouched();
+    await fixture.whenStable();
+    expect(document.valid).toBe(true);
+    expect(card()).toContain('DNI o CUIT, sin puntos ni guiones');
+
+    form.controls.tax_status.setValue('monotributo');
+    await fixture.whenStable();
+    expect(document.value).toBe('30123456');
+    expect(document.hasError('pattern')).toBe(true);
+    expect(card()).toContain('El CUIT debe tener 11 dígitos numéricos');
+  });
+
   it('exige dirección solo para envío y permite completarla en los datos de entrega', async () => {
     await load([stock], { ...customer, address: null, government_id: null });
     const form = fixture.componentInstance['form'];
