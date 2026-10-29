@@ -171,4 +171,15 @@ describe('Profile', () => {
       expect(form.controls.government_id.valid).toBe(true);
     }
   });
+
+  it('shows the change password card below the profile data', async () => {
+    const fixture = await render();
+    const cards: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('mat-card'));
+    expect(cards.map((card) => card.querySelector('mat-card-title')?.textContent?.trim())).toEqual([
+      'Mi perfil',
+      'Cambiar contraseña',
+    ]);
+    expect(cards[1].closest('app-change-password')).not.toBeNull();
+    expect(cards[1].querySelector('input[autocomplete="current-password"]')).not.toBeNull();
+  });
 });

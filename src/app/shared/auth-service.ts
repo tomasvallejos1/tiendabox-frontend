@@ -4,6 +4,7 @@ import { finalize, Observable, tap } from 'rxjs';
 
 import { environment } from '../../environments/environment';
 import {
+  ChangePasswordRequest,
   LoginRequest,
   LoginResponse,
   RegisterRequest,
@@ -41,17 +42,10 @@ export class AuthService {
   readonly isLoggedIn = computed(() => this.accessToken() !== null);
   readonly isOwner = computed(() => this.currentUser()?.role === 'owner');
   readonly isCliente = computed(() => this.currentUser()?.role === 'cliente');
-  readonly isAdmin = computed(
-    () => this.currentUser()?.role === 'admin' || this.currentUser()?.role === 'owner',
-  );
 
   constructor(private http: HttpClient) {}
 
   getToken(): string | null {
-    return this.accessToken();
-  }
-
-  token(): string | null {
     return this.accessToken();
   }
 
@@ -79,6 +73,16 @@ export class AuthService {
   // El registro no devuelve token: después de registrarse hay que iniciar sesión.
   register(data: RegisterRequest): Observable<RegisterResponse> {
     return this.http.post<RegisterResponse>(`${this.apiUrl}/register`, data);
+  }
+
+  // El backend cierra las otras sesiones del usuario pero deja viva la actual: el token
+  // guardado sigue siendo válido y la sesión local no cambia.
+  changePassword(currentPassword: string, newPassword: string): Observable<void> {
+    const body: ChangePasswordRequest = {
+      current_password: currentPassword,
+      new_password: newPassword,
+    };
+    return this.http.put<void>(`${this.apiUrl}/password`, body);
   }
 
   // finalize() limpia la sesión local incluso si la API falla o no responde.

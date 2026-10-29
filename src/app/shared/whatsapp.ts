@@ -1,4 +1,5 @@
 import { environment } from '../../environments/environment';
+import { Order } from './order';
 
 /**
  * Heurística para armar URLs de WhatsApp con números argentinos.
@@ -33,4 +34,13 @@ export function buildWhatsAppUrl(phone: string | null, message?: string): string
 export function buildQuoteWhatsAppUrl(orderId: string): string | null {
   const message = `Hola, acabo de hacer el pedido #${orderId.substring(0, 8)} y quiero consultar por los productos a cotizar.`;
   return buildWhatsAppUrl(environment.storeWhatsapp, message);
+}
+
+// Contacto de la tienda con el cliente de un pedido. Null si el cliente fue eliminado o no
+// tiene un teléfono utilizable.
+export function buildCustomerOrderWhatsAppUrl(order: Order): string | null {
+  const customer = order.customer;
+  if (!customer) return null;
+  const message = `Hola ${customer.name}, te escribimos de TiendaBox por tu pedido #${order.id.substring(0, 8)}.`;
+  return buildWhatsAppUrl(customer.phone, message);
 }

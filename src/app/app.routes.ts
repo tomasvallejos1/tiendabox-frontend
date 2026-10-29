@@ -6,6 +6,7 @@ import { CustomerForm } from './customer-form/customer-form';
 import { AdminOrderList } from './admin-order-list/admin-order-list';
 import { AdminOrderForm } from './admin-order-form/admin-order-form';
 import { CartPage } from './cart-page/cart-page';
+import { ChangePassword } from './change-password/change-password';
 import { Login } from './login/login';
 import { NotFound } from './not-found/not-found';
 import { OrderDetail } from './order-detail/order-detail';
@@ -57,6 +58,7 @@ export const routes: Routes = [
       { path: 'marcas', component: AdminBrandList },
       { path: 'marcas/new', component: BrandForm },
       { path: 'marcas/:id/edit', component: BrandForm },
+      { path: 'contrasena', component: ChangePassword },
     ],
   },
   { path: '**', component: NotFound },

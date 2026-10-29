@@ -11,7 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 
 import { Order } from '../shared/order';
-import { buildQuoteWhatsAppUrl, buildWhatsAppUrl } from '../shared/whatsapp';
+import { buildCustomerOrderWhatsAppUrl, buildQuoteWhatsAppUrl } from '../shared/whatsapp';
 import { hasPrice, summarizeOrderItems } from '../shared/order-summary';
 import { ConfirmDialog, ConfirmDialogData } from '../confirm-dialog/confirm-dialog';
 import { OrderService } from '../shared/order-service';
@@ -124,10 +124,7 @@ export class OrderDetail implements OnInit {
   }
 
   protected whatsAppUrl(order: Order): string | null {
-    const customer = order.customer;
-    if (!customer) return null;
-    const message = `Hola ${customer.name}, te escribimos de TiendaBox por tu pedido #${order.id.substring(0, 8)}.`;
-    return buildWhatsAppUrl(customer.phone, message);
+    return buildCustomerOrderWhatsAppUrl(order);
   }
 
   protected openWhatsApp(order: Order): void {

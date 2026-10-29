@@ -22,6 +22,7 @@ import { Cart, CartItem } from '../shared/cart';
 import { CartService } from '../shared/cart-service';
 import { bindGovernmentIdRule, Customer, governmentIdRule, TaxStatus } from '../shared/customer';
 import { CustomerService } from '../shared/customer-service';
+import { ConfirmDialog, ConfirmDialogData } from '../confirm-dialog/confirm-dialog';
 import { OrderService } from '../shared/order-service';
 import { hasPrice, summarizeOrderItems } from '../shared/order-summary';
 import { ProductTypeBadge } from '../product-type-badge/product-type-badge';
@@ -365,21 +366,39 @@ export class CartPage implements OnInit {
   }
 
   protected clearCart(): void {
-    if (!window.confirm('¿Estás seguro de que querés vaciar el carrito?')) return;
+    if (this.clearing() || this.confirming()) return;
 
-    this.clearing.set(true);
-    this.cartService.clear().subscribe({
-      next: () => {
-        this.cartService.setCart(null);
-        this.cart.set(null);
-        this.clearing.set(false);
-        this.loadCart();
-      },
-      error: () => {
-        this.clearing.set(false);
-        this.snackBar.open('No se pudo vaciar el carrito', 'Cerrar', { duration: 3000 });
-      },
-    });
+    const data: ConfirmDialogData = {
+      title: 'Vaciar carrito',
+      message: '¿Estás seguro de que querés vaciar el carrito?',
+      confirmLabel: 'Sí, vaciar',
+      cancelLabel: 'No, volver',
+      isDestructive: true,
+    };
+
+    this.dialog
+      .open<ConfirmDialog, ConfirmDialogData, boolean>(ConfirmDialog, {
+        data,
+        width: '400px',
+        maxWidth: '95vw',
+      })
+      .afterClosed()
+      .subscribe((confirmed) => {
+        if (!confirmed || this.clearing() || this.confirming()) return;
+        this.clearing.set(true);
+        this.cartService.clear().subscribe({
+          next: () => {
+            this.cartService.setCart(null);
+            this.cart.set(null);
+            this.clearing.set(false);
+            this.loadCart();
+          },
+          error: () => {
+            this.clearing.set(false);
+            this.snackBar.open('No se pudo vaciar el carrito', 'Cerrar', { duration: 3000 });
+          },
+        });
+      });
   }
 
   protected confirmOrder(): void {

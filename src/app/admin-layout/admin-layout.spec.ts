@@ -60,6 +60,16 @@ describe('AdminLayout', () => {
     expect(sidenav.opened).toBe(false);
   });
 
+  it('ends the panel menu with the password section', () => {
+    const links: HTMLAnchorElement[] = Array.from(
+      fixture.nativeElement.querySelectorAll('mat-nav-list[aria-label="Secciones del panel"] a'),
+    );
+    const last = links[links.length - 1];
+    expect(last.getAttribute('href')).toBe('/admin/contrasena');
+    expect(last.textContent).toContain('Contraseña');
+    expect(last.querySelector('mat-icon')?.textContent?.trim()).toBe('lock');
+  });
+
   it('closes from the close button and the backdrop', async () => {
     fixture.componentInstance['menuOpen'].set(true);
     await fixture.whenStable();
@@ -169,5 +179,18 @@ describe('Admin routes', () => {
     const parent = routes.find((route) => route.path === 'admin')!;
     expect(parent.canActivate).toHaveLength(2);
     expect(parent.children?.every((route) => !route.canActivate)).toBe(true);
+  });
+
+  it('renders the change password form inside the layout at /admin/contrasena', async () => {
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/admin/contrasena', AdminLayout);
+    harness.detectChanges();
+    await harness.fixture.whenStable();
+    expect(TestBed.inject(Router).url).toBe('/admin/contrasena');
+    const form = harness.routeNativeElement?.querySelector('app-change-password');
+    expect(form?.textContent).toContain('Cambiar contraseña');
+    expect(harness.routeNativeElement?.querySelector('a.active-link')?.getAttribute('href')).toBe(
+      '/admin/contrasena',
+    );
   });
 });

@@ -1,12 +1,14 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { provideRouter } from '@angular/router';
+import { of } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { environment } from '../../environments/environment';
+import { ConfirmDialog } from '../confirm-dialog/confirm-dialog';
 import { OrderConfirmationDialog } from '../order-confirmation-dialog/order-confirmation-dialog';
 import { AuthService } from '../shared/auth-service';
 import { Cart, CartItem } from '../shared/cart';
@@ -321,6 +323,33 @@ describe('CartPage', () => {
       );
     },
   );
+
+  it('pide confirmar con ConfirmDialog antes de vaciar el carrito', async () => {
+    await load([stock]);
+    const open = vi
+      .spyOn(fixture.debugElement.injector.get(MatDialog), 'open')
+      .mockReturnValue({ afterClosed: () => of(false) } as MatDialogRef<unknown>);
+    const clearButton = (): HTMLButtonElement =>
+      fixture.nativeElement.querySelector('.summary-actions button');
+    clearButton().click();
+    expect(open).toHaveBeenCalledWith(
+      ConfirmDialog,
+      expect.objectContaining({
+        data: expect.objectContaining({ title: 'Vaciar carrito', isDestructive: true }),
+      }),
+    );
+    http.expectNone(`${environment.apiUrl}/cart`);
+
+    open.mockReturnValue({ afterClosed: () => of(true) } as MatDialogRef<unknown>);
+    clearButton().click();
+    const request = http.expectOne(`${environment.apiUrl}/cart`);
+    expect(request.request.method).toBe('DELETE');
+    request.flush(null);
+    http.expectOne(`${environment.apiUrl}/cart`).flush(cartResponse([]));
+    http.expectOne(`${environment.apiUrl}/customer/${customer.id}`).flush(customer);
+    await fixture.whenStable();
+    expect(fixture.nativeElement.textContent).toContain('Tu carrito está vacío');
+  });
 
   it('no bloquea encargo por stock cero ni por banderas generales de disponibilidad', async () => {
     await load([{ ...encargo, available: false, exceeds_stock: true, stock_available: 0 }]);

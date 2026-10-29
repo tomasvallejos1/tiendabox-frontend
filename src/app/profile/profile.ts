@@ -8,6 +8,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
+import { ChangePassword } from '../change-password/change-password';
 import { AuthService } from '../shared/auth-service';
 import { apiErrorMessage } from '../shared/api-error';
 import { CustomerService } from '../shared/customer-service';
@@ -16,6 +17,7 @@ import { bindGovernmentIdRule, governmentIdRule, TaxStatus } from '../shared/cus
 @Component({
   selector: 'app-profile',
   imports: [
+    ChangePassword,
     ReactiveFormsModule,
     MatButtonModule,
     MatCardModule,

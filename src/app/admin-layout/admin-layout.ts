@@ -32,6 +32,7 @@ export class AdminLayout {
     { path: '/admin/categorias', label: 'Categorías', icon: 'category' },
     { path: '/admin/marcas', label: 'Marcas', icon: 'branding_watermark' },
     { path: '/admin/clientes', label: 'Clientes', icon: 'people' },
+    { path: '/admin/contrasena', label: 'Contraseña', icon: 'lock' },
   ];
 
   constructor(breakpointObserver: BreakpointObserver, destroyRef: DestroyRef) {

@@ -19,7 +19,7 @@ import { Order, OrderStatus } from '../shared/order';
 import { OrderService } from '../shared/order-service';
 import { nextStatus, ORDER_STATUS_FLOW, ORDER_STATUS_LABELS } from '../shared/order-status';
 import { OrderStatusBadge } from '../order-status-badge/order-status-badge';
-import { buildWhatsAppUrl } from '../shared/whatsapp';
+import { buildCustomerOrderWhatsAppUrl } from '../shared/whatsapp';
 import { ConfirmDialog, ConfirmDialogData } from '../confirm-dialog/confirm-dialog';
 
 @Component({
@@ -143,11 +143,7 @@ export class AdminOrderList implements OnInit {
   }
 
   protected whatsAppUrl(order: Order): string | null {
-    const customer = order.customer;
-    if (!customer) return null;
-    const shortId = order.id.substring(0, 8);
-    const message = `Hola ${customer.name}, te escribimos de TiendaBox por tu pedido #${shortId}.`;
-    return buildWhatsAppUrl(customer.phone, message);
+    return buildCustomerOrderWhatsAppUrl(order);
   }
 
   protected whatsAppTooltip(order: Order): string {

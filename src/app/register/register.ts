@@ -10,6 +10,7 @@ import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { apiErrorMessage } from '../shared/api-error';
+import { PASSWORD_MIN_LENGTH } from '../shared/auth';
 import { AuthService } from '../shared/auth-service';
 
 @Component({
@@ -33,7 +34,7 @@ export class Register {
   protected readonly form = this.formBuilder.nonNullable.group({
     name: ['', [Validators.required, Validators.pattern(/\S/)]],
     email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(6)]],
+    password: ['', [Validators.required, Validators.minLength(PASSWORD_MIN_LENGTH)]],
   });
 
   protected readonly saving = signal(false);

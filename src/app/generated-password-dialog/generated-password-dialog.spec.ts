@@ -15,6 +15,9 @@ describe('GeneratedPasswordDialog', () => {
     const fixture = TestBed.createComponent(GeneratedPasswordDialog);
     await fixture.whenStable();
     expect(fixture.nativeElement.textContent).toContain('única vez');
+    expect(fixture.nativeElement.textContent).toContain(
+      'El cliente puede cambiarla desde Mi perfil.',
+    );
     const writeText = vi.fn().mockResolvedValue(undefined);
     const previous = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
