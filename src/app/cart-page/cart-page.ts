@@ -14,6 +14,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { finalize } from 'rxjs';
 
 import { apiErrorMessage } from '../shared/api-error';
 import { AuthService } from '../shared/auth-service';
@@ -84,6 +85,7 @@ export class CartPage implements OnInit {
   );
   protected readonly hasPrice = hasPrice;
   protected readonly removingIds = signal<ReadonlySet<string>>(new Set());
+  protected readonly updatingIds = signal<ReadonlySet<string>>(new Set());
   protected readonly clearing = signal(false);
   protected readonly confirming = signal(false);
 
@@ -304,6 +306,8 @@ export class CartPage implements OnInit {
   }
 
   protected removeItem(item: CartItem): void {
+    if (this.updatingIds().has(item.product_id) || this.removingIds().has(item.product_id)) return;
+
     // Agregar al Set de IDs en proceso de eliminación.
     this.removingIds.update((set) => {
       const next = new Set(set);
@@ -330,6 +334,44 @@ export class CartPage implements OnInit {
       next.delete(productId);
       return next;
     });
+  }
+
+  protected updateItem(item: CartItem, quantity: number): void {
+    if (
+      quantity < 1 ||
+      this.confirming() ||
+      this.clearing() ||
+      this.updatingIds().has(item.product_id) ||
+      this.removingIds().has(item.product_id)
+    ) {
+      return;
+    }
+
+    this.updatingIds.update((set) => new Set(set).add(item.product_id));
+    this.cartService
+      .updateItem(item.product_id, quantity)
+      .pipe(
+        finalize(() => {
+          this.updatingIds.update((set) => {
+            const next = new Set(set);
+            next.delete(item.product_id);
+            return next;
+          });
+        }),
+      )
+      .subscribe({
+        next: (cart) => {
+          this.cartService.setCart(cart);
+          this.cart.set(cart);
+        },
+        error: (err) => {
+          this.snackBar.open(
+            apiErrorMessage(err, 'No se pudo actualizar la cantidad. Intentá de nuevo.'),
+            'Cerrar',
+            { duration: 3000 },
+          );
+        },
+      });
   }
 
   protected clearCart(): void {
