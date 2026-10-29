@@ -109,6 +109,7 @@ describe('CartPage', () => {
 
   it('suma una unidad con PUT y actualiza la cantidad, el total y el contador compartido', async () => {
     await load([stock]);
+    const setCart = vi.spyOn(TestBed.inject(CartService), 'setCart');
     expect(fixture.nativeElement.querySelector('.total-amount').textContent).toContain('1,200.00');
     quantityButton('Sumar').click();
     const request = http.expectOne(`${environment.apiUrl}/cart/items/${stock.product_id}`);
@@ -121,7 +122,7 @@ describe('CartPage', () => {
 
     expect(fixture.nativeElement.querySelector('.item-qty').textContent.trim()).toBe('2');
     expect(fixture.nativeElement.querySelector('.total-amount').textContent).toContain('2,400.00');
-    expect(TestBed.inject(CartService).getCartSignal()()).toEqual(updatedCart);
+    expect(setCart).toHaveBeenCalledExactlyOnceWith(updatedCart);
     expect(TestBed.inject(CartService).itemCount()).toBe(2);
     expect(quantityButton('Sumar').disabled).toBe(false);
   });
