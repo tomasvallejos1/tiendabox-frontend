@@ -54,6 +54,34 @@ describe('ProductForm images', () => {
     },
   );
 
+  it('rechaza un stock con decimales y no envía el formulario', async () => {
+    const fixture = TestBed.createComponent(ProductForm);
+    await fixture.whenStable();
+    http.match(() => true).forEach((request) => request.flush([]));
+    const form = fixture.componentInstance['form'];
+    form.patchValue({
+      name: 'Producto',
+      price: 100,
+      stock: 1.5,
+      category_id: 'cat',
+      brand_id: 'brand',
+    });
+    expect(form.controls.stock.hasError('pattern')).toBe(true);
+    expect(form.invalid).toBe(true);
+    fixture.componentInstance.submit();
+    await fixture.whenStable();
+    http.expectNone(environment.apiUrl + '/product');
+    expect(fixture.nativeElement.textContent).toContain('El stock debe ser un número entero');
+
+    // Al volver al tipo stock se reaplica la validación de entero.
+    form.controls.type.setValue('encargo');
+    expect(form.controls.stock.valid).toBe(true);
+    form.controls.type.setValue('stock');
+    expect(form.controls.stock.hasError('pattern')).toBe(true);
+    form.controls.stock.setValue(2);
+    expect(form.valid).toBe(true);
+  });
+
   it('rejects unsupported prefixes and updates the preview live', async () => {
     const fixture = TestBed.createComponent(ProductForm);
     await fixture.whenStable();

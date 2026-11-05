@@ -229,9 +229,15 @@ export class AdminOrderList implements OnInit {
             this.removeCancelling(order.id);
             this.snackBar.open('Pedido cancelado', 'Cerrar', { duration: 3000 });
           },
-          error: () => {
+          error: (err) => {
             this.removeCancelling(order.id);
-            this.errorMessage.set('No se pudo cancelar el pedido. Intentá de nuevo.');
+            this.snackBar.open(
+              apiErrorMessage(err, 'No se pudo cancelar el pedido. Intentá de nuevo.'),
+              'Cerrar',
+              { duration: 5000 },
+            );
+            // El pedido pudo haber cambiado de estado en el servidor (por ejemplo, ya cancelado).
+            this.loadOrders();
           },
         });
       });

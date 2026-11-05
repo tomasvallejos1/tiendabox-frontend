@@ -2,7 +2,7 @@ import { ProductImage } from '../product-image/product-image';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { ConfirmDialog } from '../../shared/confirm-dialog/confirm-dialog';
+import { ConfirmDialog, ConfirmDialogData } from '../../shared/confirm-dialog/confirm-dialog';
 import { Component, OnInit, signal } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -93,12 +93,12 @@ export class AdminProductList implements OnInit {
 
   confirmDelete(id: string, name: string): void {
     this.dialog
-      .open(ConfirmDialog, {
+      .open<ConfirmDialog, ConfirmDialogData, boolean>(ConfirmDialog, {
         width: '400px',
         data: {
           title: 'Eliminar producto',
           message: `¿Eliminar el producto "${name}"?`,
-          confirmText: 'Eliminar',
+          confirmLabel: 'Eliminar',
           isDestructive: true,
         },
       })

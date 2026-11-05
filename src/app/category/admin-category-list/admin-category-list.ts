@@ -1,6 +1,6 @@
 import { MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { ConfirmDialog } from '../../shared/confirm-dialog/confirm-dialog';
+import { ConfirmDialog, ConfirmDialogData } from '../../shared/confirm-dialog/confirm-dialog';
 import { Component, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
@@ -59,12 +59,12 @@ export class AdminCategoryList implements OnInit {
 
   confirmDelete(id: string, name: string): void {
     this.dialog
-      .open(ConfirmDialog, {
+      .open<ConfirmDialog, ConfirmDialogData, boolean>(ConfirmDialog, {
         width: '400px',
         data: {
           title: 'Eliminar categoría',
           message: `¿Eliminar la categoría "${name}"?`,
-          confirmText: 'Eliminar',
+          confirmLabel: 'Eliminar',
           isDestructive: true,
         },
       })

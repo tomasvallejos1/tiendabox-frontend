@@ -14,6 +14,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { finalize, forkJoin, timeout } from 'rxjs';
 
+import { apiErrorMessage } from '../../shared/api-error';
 import { Product } from '../../shared/product';
 import { Category } from '../../shared/category';
 import { Brand } from '../../shared/brand';
@@ -170,8 +171,10 @@ export class ProductList implements OnInit {
         this.cartService.setCart(cart);
         this.snackBar.open('Producto agregado al carrito', 'Cerrar', { duration: 3000 });
       },
-      error: () => {
-        this.snackBar.open('No se pudo agregar al carrito', 'Cerrar', { duration: 3000 });
+      error: (err) => {
+        this.snackBar.open(apiErrorMessage(err, 'No se pudo agregar al carrito'), 'Cerrar', {
+          duration: 3000,
+        });
       },
     });
   }

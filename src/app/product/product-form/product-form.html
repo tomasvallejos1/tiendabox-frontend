@@ -81,6 +81,8 @@
             <mat-error>El stock es obligatorio.</mat-error>
           } @else if (form.controls.stock.hasError('min')) {
             <mat-error>El stock no puede ser negativo.</mat-error>
+          } @else if (form.controls.stock.hasError('pattern')) {
+            <mat-error>El stock debe ser un número entero</mat-error>
           }
         </mat-form-field>
       }

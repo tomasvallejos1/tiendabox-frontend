@@ -1,5 +1,6 @@
 import { ProductImage } from '../product-image/product-image';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
@@ -45,7 +46,7 @@ export class ProductForm implements OnInit {
     image_url: ['', Validators.pattern(/^https?:\/\//)],
     type: ['stock' as ProductType, Validators.required],
     price: [0, [Validators.required, Validators.min(0.01)]],
-    stock: [0, [Validators.required, Validators.min(0)]],
+    stock: [0, [Validators.required, Validators.min(0), Validators.pattern(/^\d+$/)]],
     category_id: ['', Validators.required],
     brand_id: ['', Validators.required],
   });
@@ -66,6 +67,7 @@ export class ProductForm implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private snackBar: MatSnackBar,
+    private destroyRef: DestroyRef,
   ) {}
 
   ngOnInit(): void {
@@ -76,9 +78,9 @@ export class ProductForm implements OnInit {
       next: (brands) => this.brands.set(brands),
     });
 
-    this.form.controls.type.valueChanges.subscribe((type) => {
-      this.applyTypeValidators(type);
-    });
+    this.form.controls.type.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((type) => this.applyTypeValidators(type));
 
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
@@ -112,7 +114,7 @@ export class ProductForm implements OnInit {
     const { price, stock } = this.form.controls;
     if (type === 'stock') {
       price.setValidators([Validators.required, Validators.min(0.01)]);
-      stock.setValidators([Validators.required, Validators.min(0)]);
+      stock.setValidators([Validators.required, Validators.min(0), Validators.pattern(/^\d+$/)]);
     } else {
       price.clearValidators();
       stock.clearValidators();

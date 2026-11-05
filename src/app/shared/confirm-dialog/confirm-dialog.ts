@@ -5,7 +5,6 @@ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/materia
 export interface ConfirmDialogData {
   title: string;
   message: string;
-  confirmText?: string;
   confirmLabel?: string;
   cancelLabel?: string;
   isDestructive?: boolean;

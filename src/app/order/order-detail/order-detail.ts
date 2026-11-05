@@ -10,6 +10,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 
+import { apiErrorMessage } from '../../shared/api-error';
 import { Order } from '../../shared/order';
 import { buildCustomerOrderWhatsAppUrl, buildQuoteWhatsAppUrl } from '../../shared/whatsapp';
 import { hasPrice, summarizeOrderItems } from '../../shared/order-summary';
@@ -97,9 +98,11 @@ export class OrderDetail implements OnInit {
         this.order.update((current) => (current ? { ...current, ...updated } : updated));
         this.advancing.set(false);
       },
-      error: () => {
+      error: (err) => {
         this.advancing.set(false);
-        this.errorMessage.set('No se pudo actualizar el estado. Intentá de nuevo.');
+        this.errorMessage.set(
+          apiErrorMessage(err, 'No se pudo actualizar el estado. Intentá de nuevo.'),
+        );
       },
     });
   }
@@ -161,9 +164,11 @@ export class OrderDetail implements OnInit {
             this.order.update((current) => (current ? { ...current, ...updated } : updated));
             this.cancelling.set(false);
           },
-          error: () => {
+          error: (err) => {
             this.cancelling.set(false);
-            this.errorMessage.set('No se pudo cancelar el pedido. Intentá de nuevo.');
+            this.errorMessage.set(
+              apiErrorMessage(err, 'No se pudo cancelar el pedido. Intentá de nuevo.'),
+            );
           },
         });
       });

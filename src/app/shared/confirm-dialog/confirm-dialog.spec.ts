@@ -15,7 +15,7 @@ describe('ConfirmDialog', () => {
           useValue: {
             title: 'Eliminar producto',
             message: '¿Eliminar Prueba?',
-            confirmText: 'Eliminar',
+            confirmLabel: 'Eliminar',
             isDestructive: true,
           },
         },
@@ -25,6 +25,9 @@ describe('ConfirmDialog', () => {
     const fixture = TestBed.createComponent(ConfirmDialog);
     await fixture.whenStable();
     expect(fixture.nativeElement.textContent).toContain('¿Eliminar Prueba?');
+    expect(fixture.nativeElement.querySelector('button[mat-flat-button]').textContent.trim()).toBe(
+      'Eliminar',
+    );
     fixture.nativeElement.querySelector('button[mat-button]').click();
     expect(close).toHaveBeenLastCalledWith(false);
     fixture.nativeElement.querySelector('button[mat-flat-button]').click();

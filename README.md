@@ -3,7 +3,27 @@
 Frontend de la app tiendabox para la materia desarrollo de software.
 
 Aplicación Angular 21 (standalone, Angular Material 3) que consume la API REST de TiendaBox.
-**Antes de escribir código leé [CONVENTIONS.md](CONVENTIONS.md).**
+
+## Estructura
+
+`src/app/` tiene una carpeta por recurso: `auth`, `brand`, `cart`, `category`, `customer`,
+`layout`, `order` y `product`. Dentro de cada una hay una subcarpeta por componente (por ejemplo
+`product/product-form/` con su `.ts`, `.html`, `.css` y `.spec.ts`).
+
+`src/app/shared/` reúne lo que usan varios recursos: los servicios HTTP, los modelos, las funciones
+puras (como `apiErrorMessage` o `summarizeOrderItems`), los guards, el interceptor de autenticación y
+el diálogo de confirmación (`shared/confirm-dialog/`).
+
+Convenciones del proyecto:
+
+- Inyección de dependencias por constructor en componentes y servicios; la única excepción es
+  `FormBuilder`, que se obtiene con `inject()` para poder declarar el formulario como campo. Los
+  guards y el interceptor son funciones, así que usan `inject()`.
+- Estado del componente en signals (`signal`, `computed`).
+- Control de flujo en los templates con `@if` y `@for`, no con `*ngIf` ni `*ngFor`.
+- Rutas eager (`component:`, nunca `loadComponent:`).
+- Formularios con Reactive Forms y `fb.nonNullable.group(...)`.
+- Solo componentes de Angular Material para la interfaz, sin otras librerías de UI.
 
 ## Requisitos
 

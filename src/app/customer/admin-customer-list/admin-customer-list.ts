@@ -13,7 +13,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { finalize } from 'rxjs';
-import { ConfirmDialog } from '../../shared/confirm-dialog/confirm-dialog';
+import { ConfirmDialog, ConfirmDialogData } from '../../shared/confirm-dialog/confirm-dialog';
 import { apiErrorMessage } from '../../shared/api-error';
 import { CustomerWithEmail } from '../../shared/customer';
 import { CustomerService } from '../../shared/customer-service';
@@ -100,12 +100,12 @@ export class AdminCustomerList implements OnInit {
   protected confirmDelete(customer: CustomerWithEmail): void {
     if (this.deletingIds().has(customer.id)) return;
     this.dialog
-      .open(ConfirmDialog, {
+      .open<ConfirmDialog, ConfirmDialogData, boolean>(ConfirmDialog, {
         width: '400px',
         data: {
           title: 'Eliminar cliente',
           message: `¿Eliminar al cliente "${customer.name}"?`,
-          confirmText: 'Eliminar',
+          confirmLabel: 'Eliminar',
           isDestructive: true,
         },
       })

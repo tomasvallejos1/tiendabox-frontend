@@ -183,6 +183,21 @@
             <p class="block-reason">{{ blockReason }}</p>
           }
 
+          @if (profileUnavailable) {
+            <div class="profile-load-error">
+              @if (profileLoadError()) {
+                <p class="error-message">{{ profileLoadError() }}</p>
+              }
+              <button matButton="outlined" (click)="prefillAddress()" [disabled]="profileLoading()">
+                @if (profileLoading()) {
+                  Reintentando…
+                } @else {
+                  Reintentar
+                }
+              </button>
+            </div>
+          }
+
           <div class="summary-actions">
             <button
               matButton="outlined"

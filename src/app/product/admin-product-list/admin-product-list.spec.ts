@@ -39,7 +39,7 @@ describe('AdminProductList', () => {
     expect(dialog.open).toHaveBeenCalledWith(
       ConfirmDialog,
       expect.objectContaining({
-        data: expect.objectContaining({ confirmText: 'Eliminar', isDestructive: true }),
+        data: expect.objectContaining({ confirmLabel: 'Eliminar', isDestructive: true }),
       }),
     );
     http.expectNone(environment.apiUrl + '/product/test-id');

@@ -171,6 +171,14 @@
   margin: 8px 0;
 }
 
+.profile-load-error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
 .summary-actions {
   display: flex;
   justify-content: flex-end;

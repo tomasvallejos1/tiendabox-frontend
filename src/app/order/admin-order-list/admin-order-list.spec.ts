@@ -5,6 +5,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
 import { MatSelectHarness } from '@angular/material/select/testing';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltip } from '@angular/material/tooltip';
 import { By } from '@angular/platform-browser';
 
@@ -262,17 +263,38 @@ describe('AdminOrderList', () => {
 
   it('permite reintentar y mantiene el pedido si la cancelación falla', async () => {
     await load();
+    const open = vi.spyOn(fixture.debugElement.injector.get(MatSnackBar), 'open');
     await confirmCancellation();
     http
       .expectOne(`${environment.apiUrl}/order/${order.id}/cancel`)
       .flush({}, { status: 500, statusText: 'Server Error' });
+    expect(open).toHaveBeenCalledWith(
+      'No se pudo cancelar el pedido. Intentá de nuevo.',
+      'Cerrar',
+      { duration: 5000 },
+    );
+    http.expectOne(`${environment.apiUrl}/orders`).flush([order]);
     await fixture.whenStable();
     const menu = await openMenu();
     expect(button('Cancelar pedido', menu).disabled).toBe(false);
-    expect(fixture.nativeElement.textContent).toContain('No se pudo cancelar el pedido');
     expect(fixture.nativeElement.querySelector('.order-card').textContent).toContain(
       'En preparación',
     );
+  });
+
+  it('muestra el motivo del backend al fallar la cancelación y recarga la lista', async () => {
+    await load();
+    const open = vi.spyOn(fixture.debugElement.injector.get(MatSnackBar), 'open');
+    await confirmCancellation();
+    http
+      .expectOne(`${environment.apiUrl}/order/${order.id}/cancel`)
+      .flush({ error: 'El pedido ya está cancelado' }, { status: 400, statusText: 'Bad Request' });
+    expect(open).toHaveBeenCalledWith('El pedido ya está cancelado', 'Cerrar', { duration: 5000 });
+    http.expectOne(`${environment.apiUrl}/orders`).flush([{ ...order, status: 'cancelado' }]);
+    await fixture.whenStable();
+    const card: HTMLElement = fixture.nativeElement.querySelector('.order-card');
+    expect(card.textContent).toContain('Cancelado');
+    expect(fixture.nativeElement.querySelector('.error-message')).toBeNull();
   });
 
   it.each(['entregado', 'cancelado'] as const)(

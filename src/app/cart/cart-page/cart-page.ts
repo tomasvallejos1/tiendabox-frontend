@@ -96,6 +96,8 @@ export class CartPage implements OnInit {
   protected readonly profileSaving = signal(false);
   protected readonly profileSaved = signal(false);
   protected readonly profileError = signal<string | null>(null);
+  protected readonly profileLoading = signal(false);
+  protected readonly profileLoadError = signal<string | null>(null);
 
   // Campos faltantes del perfil (para mostrar solo los que falten).
   protected readonly missingRequired = signal<string[]>([]);
@@ -160,25 +162,34 @@ export class CartPage implements OnInit {
     });
   }
 
-  private prefillAddress(): void {
-    if (!this.customerId) return;
+  protected prefillAddress(): void {
+    this.customerId ??= this.authService.getCustomerId();
+    if (!this.customerId || this.profileLoading()) return;
 
-    this.customerService.getCustomer(this.customerId).subscribe({
-      next: (customer) => {
-        this.customer.set(customer);
-        this.profileForm.patchValue({
-          name: customer.name || '',
-          government_id: customer.government_id ?? '',
-          tax_status: customer.tax_status || 'consumidor_final',
-          phone: customer.phone ?? '',
-          address: customer.address ?? '',
-        });
-        if (customer.address) {
-          this.form.controls.delivery_address.setValue(customer.address);
-        }
-        this.evaluateProfileCompleteness();
-      },
-    });
+    this.profileLoading.set(true);
+    this.customerService
+      .getCustomer(this.customerId)
+      .pipe(finalize(() => this.profileLoading.set(false)))
+      .subscribe({
+        next: (customer) => {
+          this.profileLoadError.set(null);
+          this.customer.set(customer);
+          this.profileForm.patchValue({
+            name: customer.name || '',
+            government_id: customer.government_id ?? '',
+            tax_status: customer.tax_status || 'consumidor_final',
+            phone: customer.phone ?? '',
+            address: customer.address ?? '',
+          });
+          if (customer.address) {
+            this.form.controls.delivery_address.setValue(customer.address);
+          }
+          this.evaluateProfileCompleteness();
+        },
+        error: (err) => {
+          this.profileLoadError.set(apiErrorMessage(err, 'No se pudieron cargar tus datos.'));
+        },
+      });
   }
 
   /** Separa los datos necesarios para el pedido de los datos opcionales del perfil. */
@@ -230,8 +241,16 @@ export class CartPage implements OnInit {
     );
   }
 
+  /** El perfil no se pudo cargar (error de la API o sesión sin cliente asociado). */
+  protected get profileUnavailable(): boolean {
+    return !this.customer() && (this.profileLoadError() !== null || !this.customerId);
+  }
+
   /** Mensaje explicativo de por qué está bloqueado el botón de confirmar. */
   protected get blockReason(): string | null {
+    if (this.profileUnavailable) {
+      return 'No pudimos cargar tus datos de contacto. Recargá la página.';
+    }
     if (this.missingRequired().includes('phone')) {
       return 'Cargá tu teléfono para que podamos contactarte por tu pedido';
     }
@@ -312,9 +331,11 @@ export class CartPage implements OnInit {
         this.cart.set(updatedCart);
         this.removeFromSet(item.product_id);
       },
-      error: () => {
+      error: (err) => {
         this.removeFromSet(item.product_id);
-        this.snackBar.open('No se pudo eliminar el producto', 'Cerrar', { duration: 3000 });
+        this.snackBar.open(apiErrorMessage(err, 'No se pudo eliminar el producto'), 'Cerrar', {
+          duration: 3000,
+        });
       },
     });
   }
@@ -393,9 +414,11 @@ export class CartPage implements OnInit {
             this.clearing.set(false);
             this.loadCart();
           },
-          error: () => {
+          error: (err) => {
             this.clearing.set(false);
-            this.snackBar.open('No se pudo vaciar el carrito', 'Cerrar', { duration: 3000 });
+            this.snackBar.open(apiErrorMessage(err, 'No se pudo vaciar el carrito'), 'Cerrar', {
+              duration: 3000,
+            });
           },
         });
       });

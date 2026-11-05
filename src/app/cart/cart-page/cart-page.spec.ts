@@ -551,6 +551,53 @@ describe('CartPage', () => {
     ).toBe(false);
   });
 
+  function retryButton(): HTMLButtonElement | null {
+    return fixture.nativeElement.querySelector('.profile-load-error button');
+  }
+
+  it('explica el bloqueo si falla la carga del perfil y habilita Confirmar al reintentar', async () => {
+    fixture.detectChanges();
+    http.expectOne(`${environment.apiUrl}/cart`).flush(cartResponse([stock]));
+    http
+      .expectOne(`${environment.apiUrl}/customer/${customer.id}`)
+      .flush(null, { status: 500, statusText: 'Server Error' });
+    await fixture.whenStable();
+
+    expect(button().disabled).toBe(true);
+    expect(fixture.nativeElement.querySelector('.block-reason').textContent).toContain(
+      'No pudimos cargar tus datos de contacto. Recargá la página.',
+    );
+    expect(fixture.nativeElement.querySelector('.profile-load-error').textContent).toContain(
+      'No se pudieron cargar tus datos.',
+    );
+    expect(retryButton()!.textContent?.trim()).toBe('Reintentar');
+
+    retryButton()!.click();
+    const request = http.expectOne(`${environment.apiUrl}/customer/${customer.id}`);
+    await fixture.whenStable();
+    expect(retryButton()!.disabled).toBe(true);
+    request.flush(customer);
+    await fixture.whenStable();
+
+    expect(retryButton()).toBeNull();
+    expect(fixture.nativeElement.querySelector('.block-reason')).toBeNull();
+    expect(button().disabled).toBe(false);
+  });
+
+  it('explica el bloqueo si la sesión no tiene un cliente asociado', async () => {
+    vi.spyOn(TestBed.inject(AuthService), 'getCustomerId').mockReturnValue(null);
+    fixture.detectChanges();
+    http.expectOne(`${environment.apiUrl}/cart`).flush(cartResponse([stock]));
+    await fixture.whenStable();
+
+    expect(button().disabled).toBe(true);
+    expect(fixture.nativeElement.querySelector('.block-reason').textContent).toContain(
+      'No pudimos cargar tus datos de contacto. Recargá la página.',
+    );
+    retryButton()!.click();
+    http.expectNone(`${environment.apiUrl}/customer/${customer.id}`);
+  });
+
   it('valida entrega y exige una dirección no vacía solo para envío', async () => {
     await load([encargo]);
     button().click();

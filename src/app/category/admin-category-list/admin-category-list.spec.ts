@@ -42,7 +42,7 @@ describe('AdminCategoryList', () => {
     expect(dialog.open).toHaveBeenCalledWith(
       ConfirmDialog,
       expect.objectContaining({
-        data: expect.objectContaining({ confirmText: 'Eliminar', isDestructive: true }),
+        data: expect.objectContaining({ confirmLabel: 'Eliminar', isDestructive: true }),
       }),
     );
     http.expectNone(environment.apiUrl + '/category/test-id');
@@ -62,5 +62,34 @@ describe('AdminCategoryList', () => {
     expect(snackBar.open).toHaveBeenLastCalledWith('Categoría eliminada', 'Cerrar', {
       duration: 3000,
     });
+  });
+
+  it('muestra el 409 del backend al eliminar una categoría con productos y conserva la fila', async () => {
+    const fixture = TestBed.createComponent(AdminCategoryList);
+    vi.spyOn(fixture.debugElement.injector.get(MatSnackBar), 'open').mockImplementation(
+      snackBar.open,
+    );
+    await fixture.whenStable();
+    http
+      .match(() => true)
+      .forEach((request) => request.flush([{ id: 'test-id', name: 'Prueba', description: null }]));
+    await fixture.whenStable();
+    dialog.open.mockReturnValue({ afterClosed: () => of(true) });
+    fixture.componentInstance.confirmDelete('test-id', 'Prueba');
+    http
+      .expectOne(environment.apiUrl + '/category/test-id')
+      .flush(
+        { error: 'No se puede eliminar la categoría: tiene 3 productos' },
+        { status: 409, statusText: 'Conflict' },
+      );
+    await fixture.whenStable();
+
+    expect(snackBar.open).toHaveBeenLastCalledWith(
+      'No se puede eliminar la categoría: tiene 3 productos',
+      'Cerrar',
+      { duration: 5000 },
+    );
+    expect(fixture.nativeElement.querySelectorAll('tr[mat-row]')).toHaveLength(1);
+    expect(fixture.nativeElement.querySelector('tr[mat-row]').textContent).toContain('Prueba');
   });
 });

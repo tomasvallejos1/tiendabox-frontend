@@ -105,4 +105,27 @@ describe('AdminCustomerList', () => {
     await fixture.whenStable();
     expect(fixture.nativeElement.textContent).toContain('Todavía no hay clientes');
   });
+
+  it('muestra el 409 del backend al eliminar un cliente con pedidos y conserva la fila', async () => {
+    const fixture = TestBed.createComponent(AdminCustomerList);
+    await fixture.whenStable();
+    http.expectOne(environment.apiUrl + '/customers').flush([local]);
+    await fixture.whenStable();
+    fixture.componentInstance['confirmDelete'](local);
+    http
+      .expectOne(environment.apiUrl + '/customer/local')
+      .flush(
+        { error: 'No se puede eliminar el cliente: tiene 2 pedidos' },
+        { status: 409, statusText: 'Conflict' },
+      );
+    await fixture.whenStable();
+
+    expect(snack).toHaveBeenLastCalledWith(
+      'No se puede eliminar el cliente: tiene 2 pedidos',
+      'Cerrar',
+      { duration: 5000 },
+    );
+    expect(fixture.nativeElement.querySelectorAll('tr[mat-row]')).toHaveLength(1);
+    expect(fixture.nativeElement.querySelector('tr[mat-row]').textContent).toContain('Ana');
+  });
 });
